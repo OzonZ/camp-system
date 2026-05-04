@@ -5,189 +5,151 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>⚔️ Guild Camp System</title>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;800&family=Sarabun:wght@300;400;600&display=swap" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet"/>
   <style>
     :root {
-      --bg: #0d0f1a;
-      --panel: #13162a;
-      --panel2: #1a1f38;
-      --border: #2e3460;
-      --gold: #f0c040;
-      --gold2: #d4a017;
-      --accent: #5e7cff;
-      --green: #3dd68c;
-      --red: #ff5c5c;
-      --purple: #b06fff;
-      --text: #e8eaf6;
-      --muted: #7b82b0;
-      --unity: #4fc3f7;
-      --roblox: #ff7043;
-      --webapp: #66bb6a;
+      --bg:      #080e1a;
+      --surface: #0d1628;
+      --card:    #111e35;
+      --raised:  #172240;
+      --border:  #1e2f4a;
+      --border2: #26406a;
+      --blue:    #4d8cff;
+      --blue2:   #2563eb;
+      --cyan:    #38bdf8;
+      --green:   #34d399;
+      --amber:   #fbbf24;
+      --red:     #f87171;
+      --purple:  #a78bfa;
+      --text:    #e2eaf8;
+      --muted:   #6b84a8;
+      --dim:     #3d5475;
     }
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-    body {
-      font-family: 'Sarabun', sans-serif;
-      background: var(--bg);
-      color: var(--text);
-      min-height: 100vh;
-    }
-
-    /* ─── PARTICLES BG ─────────────────────────── */
+    body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; font-size: 15px; line-height: 1.6; }
     #particles { position: fixed; inset: 0; pointer-events: none; z-index: 0; overflow: hidden; }
-    .star { position: absolute; border-radius: 50%; background: white; animation: twinkle var(--d, 4s) var(--delay, 0s) infinite alternate; }
-    @keyframes twinkle { from { opacity: 0.05; } to { opacity: 0.5; } }
-
-    /* ─── LAYOUT ───────────────────────────────── */
-    #app { position: relative; z-index: 1; max-width: 1100px; margin: 0 auto; padding: 20px; }
-
-    /* ─── SCREENS ──────────────────────────────── */
-    .screen { display: none; animation: fadeIn .4s ease; }
+    .dot { position: absolute; border-radius: 50%; background: rgba(77,140,255,.15); animation: pulse var(--d,6s) var(--dl,0s) infinite alternate; }
+    @keyframes pulse { from { opacity:.3; transform:scale(1); } to { opacity:.8; transform:scale(1.4); } }
+    #app { position: relative; z-index: 1; max-width: 960px; margin: 0 auto; padding: 24px 20px; }
+    .screen { display: none; animation: up .35s ease; }
     .screen.active { display: block; }
-    @keyframes fadeIn { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes up { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:translateY(0); } }
 
-    /* ─── HEADER / LOGO ────────────────────────── */
-    .logo-wrap { text-align: center; padding: 40px 0 30px; }
-    .logo-title {
-      font-family: 'Cinzel', serif;
-      font-size: 2.8rem;
-      font-weight: 800;
-      background: linear-gradient(135deg, var(--gold), var(--gold2), var(--accent));
-      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-      letter-spacing: .05em;
-      text-shadow: none;
-    }
-    .logo-sub { color: var(--muted); font-size: .9rem; margin-top: 6px; letter-spacing: .1em; text-transform: uppercase; }
+    /* LOGO */
+    .logo-wrap { text-align: center; padding: 48px 0 36px; }
+    .logo-icon { font-size: 2.4rem; margin-bottom: 10px; }
+    .logo-title { font-family: 'Space Grotesk', sans-serif; font-size: 2rem; font-weight: 700; color: var(--text); letter-spacing: -.02em; }
+    .logo-title span { color: var(--blue); }
+    .logo-sub { color: var(--muted); font-size: .82rem; margin-top: 6px; letter-spacing: .08em; text-transform: uppercase; }
 
-    /* ─── CARD / PANEL ─────────────────────────── */
-    .card {
-      background: var(--panel);
-      border: 1px solid var(--border);
-      border-radius: 14px;
-      padding: 20px;
-      margin-bottom: 16px;
-    }
-    .card-title {
-      font-family: 'Cinzel', serif;
-      font-size: 1rem;
-      color: var(--gold);
-      margin-bottom: 14px;
-      letter-spacing: .05em;
-      display: flex; align-items: center; gap: 8px;
-    }
+    /* CARD */
+    .card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 20px; margin-bottom: 14px; }
+    .card-title { font-family: 'Space Grotesk', sans-serif; font-size: .88rem; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; margin-bottom: 14px; }
 
-    /* ─── INPUTS / BUTTONS ─────────────────────── */
+    /* INPUTS */
     input, select, textarea {
-      background: var(--panel2);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      color: var(--text);
-      font-family: 'Sarabun', sans-serif;
-      font-size: 1rem;
-      padding: 10px 14px;
-      width: 100%;
-      outline: none;
-      transition: border-color .2s;
+      background: var(--surface); border: 1px solid var(--border); border-radius: 8px;
+      color: var(--text); font-family: 'Inter', sans-serif; font-size: .92rem;
+      padding: 9px 13px; width: 100%; outline: none; transition: border-color .15s;
     }
-    input:focus, select:focus, textarea:focus { border-color: var(--accent); }
-    textarea { resize: vertical; min-height: 70px; }
+    input:focus, select:focus, textarea:focus { border-color: var(--blue); }
+    textarea { resize: vertical; min-height: 72px; }
+    select option { background: var(--surface); }
 
+    /* BUTTONS */
     .btn {
-      display: inline-flex; align-items: center; gap: 6px;
+      display: inline-flex; align-items: center; justify-content: center; gap: 6px;
       border: none; border-radius: 8px; cursor: pointer;
-      font-family: 'Sarabun', sans-serif; font-size: .95rem; font-weight: 600;
-      padding: 10px 20px; transition: all .2s;
+      font-family: 'Inter', sans-serif; font-size: .88rem; font-weight: 600;
+      padding: 9px 18px; transition: opacity .15s, transform .1s; white-space: nowrap;
     }
-    .btn-gold  { background: linear-gradient(135deg, var(--gold), var(--gold2)); color: #1a1000; }
-    .btn-gold:hover { filter: brightness(1.15); transform: translateY(-1px); }
-    .btn-accent { background: var(--accent); color: white; }
-    .btn-accent:hover { filter: brightness(1.2); }
-    .btn-green  { background: var(--green); color: #001a0e; }
-    .btn-green:hover { filter: brightness(1.15); }
-    .btn-red    { background: var(--red); color: white; }
-    .btn-red:hover { filter: brightness(1.15); }
-    .btn-ghost  { background: transparent; border: 1px solid var(--border); color: var(--muted); }
-    .btn-ghost:hover { border-color: var(--accent); color: var(--accent); }
-    .btn-sm { padding: 6px 12px; font-size: .82rem; }
-    .btn-full { width: 100%; justify-content: center; margin-top: 10px; }
+    .btn:hover { opacity: .88; }
+    .btn:active { transform: scale(.97); }
+    .btn-primary { background: var(--blue2); color: #fff; }
+    .btn-gold    { background: var(--amber); color: #1a0f00; }
+    .btn-green   { background: var(--green); color: #001a10; }
+    .btn-red     { background: var(--red);   color: #1a0000; }
+    .btn-outline { background: transparent; border: 1px solid var(--border2); color: var(--muted); }
+    .btn-outline:hover { border-color: var(--blue); color: var(--blue); }
+    .btn-sm  { padding: 5px 11px; font-size: .8rem; border-radius: 6px; }
+    .btn-full { width: 100%; margin-top: 10px; }
+    .btn-accent { background: var(--blue); color: white; }
+    .btn-purple { background: var(--purple); color: white; }
+    .btn-ghost { background: transparent; border: 1px solid var(--border2); color: var(--muted); }
 
-    /* ─── BADGE / TAG ──────────────────────────── */
-    .badge {
-      display: inline-block; border-radius: 20px; padding: 2px 10px;
-      font-size: .75rem; font-weight: 600; letter-spacing: .05em;
-    }
-    .badge-unity  { background: rgba(79,195,247,.2); color: var(--unity); border: 1px solid var(--unity); }
-    .badge-roblox { background: rgba(255,112,67,.2); color: var(--roblox); border: 1px solid var(--roblox); }
-    .badge-webapp { background: rgba(102,187,106,.2); color: var(--webapp); border: 1px solid var(--webapp); }
-    .badge-leader { background: rgba(240,192,64,.2); color: var(--gold); border: 1px solid var(--gold); }
-    .badge-member { background: rgba(94,124,255,.2); color: var(--accent); border: 1px solid var(--accent); }
+    /* BADGES */
+    .badge { display: inline-block; border-radius: 6px; padding: 2px 8px; font-size: .72rem; font-weight: 600; letter-spacing: .04em; }
+    .badge-unity  { background: rgba(56,189,248,.12); color: var(--cyan);   border: 1px solid rgba(56,189,248,.3); }
+    .badge-roblox { background: rgba(251,146,60,.12);  color: #fb923c;      border: 1px solid rgba(251,146,60,.3); }
+    .badge-webapp { background: rgba(52,211,153,.12);  color: var(--green); border: 1px solid rgba(52,211,153,.3); }
+    .badge-leader { background: rgba(251,191,36,.12);  color: var(--amber); border: 1px solid rgba(251,191,36,.3); }
+    .badge-member { background: rgba(77,140,255,.12);  color: var(--blue);  border: 1px solid rgba(77,140,255,.3); }
 
-    /* ─── PROGRESS ─────────────────────────────── */
-    .prog-wrap { background: var(--panel2); border-radius: 99px; height: 10px; overflow: hidden; margin: 8px 0; }
-    .prog-fill  { height: 100%; border-radius: 99px; transition: width .8s cubic-bezier(.4,0,.2,1); }
-    .prog-gold  { background: linear-gradient(90deg, var(--gold2), var(--gold)); }
-    .prog-green { background: linear-gradient(90deg, #1e7e4f, var(--green)); }
-    .prog-accent{ background: linear-gradient(90deg, #2644cc, var(--accent)); }
+    /* PROGRESS */
+    .prog-wrap { background: var(--surface); border-radius: 99px; height: 6px; overflow: hidden; margin: 8px 0; }
+    .prog-fill  { height: 100%; border-radius: 99px; transition: width .7s cubic-bezier(.4,0,.2,1); }
+    .prog-blue  { background: var(--blue2); }
+    .prog-amber { background: var(--amber); }
+    .prog-green { background: var(--green); }
+    .prog-accent { background: var(--blue); }
+    .prog-gold { background: var(--amber); }
 
-    /* ─── GRID ─────────────────────────────────── */
-    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
-    .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
-    @media(max-width:640px) { .grid-2,.grid-3 { grid-template-columns: 1fr; } }
+    /* GRIDS */
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .grid-3 { display: grid; grid-template-columns: repeat(3,1fr); gap: 12px; }
+    @media(max-width:600px){ .grid-2,.grid-3 { grid-template-columns: 1fr; } }
 
-    /* ─── GUILD SELECT CARDS ───────────────────── */
+    /* GUILD SELECTOR */
     .guild-sel {
-      background: var(--panel2); border: 2px solid var(--border);
-      border-radius: 14px; padding: 18px; cursor: pointer;
-      transition: all .25s; display: flex; flex-direction: column; gap: 8px;
+      background: var(--card); border: 1px solid var(--border); border-radius: 10px;
+      padding: 16px; cursor: pointer; transition: border-color .2s, background .2s;
+      display: flex; flex-direction: column; gap: 6px;
     }
-    .guild-sel:hover { border-color: var(--gold); transform: translateY(-3px); box-shadow: 0 8px 24px rgba(240,192,64,.15); }
-    .guild-sel.selected { border-color: var(--gold); background: rgba(240,192,64,.05); }
-    .guild-sel-name { font-family: 'Cinzel', serif; font-size: 1rem; color: var(--gold); }
-    .guild-sel-members { font-size: .82rem; color: var(--muted); }
+    .guild-sel:hover { border-color: var(--blue); background: var(--raised); }
+    .guild-sel-name { font-family: 'Space Grotesk', sans-serif; font-size: .95rem; font-weight: 600; color: var(--text); }
+    .guild-sel-sub  { font-size: .78rem; color: var(--muted); }
+    .guild-sel-members { font-size: .78rem; color: var(--muted); }
 
-    /* ─── QUEST ITEM ────────────────────────────── */
+    /* QUEST */
     .quest-item {
-      background: var(--panel2); border-radius: 10px;
-      padding: 14px; margin-bottom: 10px;
-      border-left: 3px solid var(--accent);
-      display: flex; align-items: flex-start; gap: 12px;
+      background: var(--surface); border-radius: 8px; padding: 12px 14px;
+      margin-bottom: 8px; border-left: 2px solid var(--blue2);
+      display: flex; gap: 12px; align-items: flex-start;
     }
-    .quest-item.done { border-left-color: var(--green); opacity: .7; }
-    .quest-icon { font-size: 1.5rem; }
-    .quest-title { font-weight: 600; font-size: .95rem; margin-bottom: 4px; }
-    .quest-desc  { font-size: .82rem; color: var(--muted); }
-    .quest-pts   { font-size: .8rem; color: var(--gold); font-weight: 600; }
+    .quest-item.done { border-left-color: var(--green); opacity: .65; }
+    .quest-icon  { font-size: 1.3rem; flex-shrink: 0; }
+    .quest-title { font-weight: 600; font-size: .9rem; margin-bottom: 2px; }
+    .quest-desc  { font-size: .8rem; color: var(--muted); }
+    .quest-pts   { font-size: .78rem; color: var(--amber); font-weight: 600; margin-top: 4px; }
 
-    /* ─── CARD ITEM ─────────────────────────────── */
+    /* GAME CARD */
     .card-item {
-      background: var(--panel2); border-radius: 12px;
-      padding: 14px 12px; text-align: center;
-      border: 1px solid var(--border); position: relative;
-      transition: all .2s;
+      background: var(--surface); border: 1px solid var(--border); border-radius: 10px;
+      padding: 14px 10px; text-align: center; position: relative; transition: border-color .2s;
     }
-    .card-item:hover { border-color: var(--purple); transform: translateY(-2px); }
-    .card-emoji { font-size: 2.2rem; margin-bottom: 6px; }
-    .card-name  { font-size: .85rem; font-weight: 600; margin-bottom: 4px; }
-    .card-effect{ font-size: .75rem; color: var(--muted); margin-bottom: 8px; }
-    .card-used  { opacity: .4; }
+    .card-item:hover { border-color: var(--purple); }
+    .card-emoji  { font-size: 2rem; margin-bottom: 6px; }
+    .card-name   { font-size: .82rem; font-weight: 600; margin-bottom: 3px; }
+    .card-effect { font-size: .72rem; color: var(--muted); margin-bottom: 8px; }
+    .card-used   { opacity: .35; }
     .card-used::after {
       content: '✓ ใช้แล้ว'; position: absolute; inset: 0;
       display: flex; align-items: center; justify-content: center;
-      background: rgba(0,0,0,.5); border-radius: 12px;
-      font-size: .85rem; color: var(--green); font-weight: 700;
+      background: rgba(0,0,0,.55); border-radius: 10px;
+      font-size: .82rem; color: var(--green); font-weight: 700;
     }
 
-    /* ─── MEMBER LIST ───────────────────────────── */
+    /* MEMBER ROW */
     .member-row {
       display: flex; align-items: center; justify-content: space-between;
-      padding: 10px 12px; background: var(--panel2); border-radius: 8px; margin-bottom: 8px;
+      padding: 9px 12px; background: var(--surface); border-radius: 8px; margin-bottom: 6px;
     }
     .member-avatar {
-      width: 32px; height: 32px; border-radius: 50%;
-      background: linear-gradient(135deg, var(--accent), var(--purple));
+      width: 30px; height: 30px; border-radius: 50%; background: var(--blue2);
       display: flex; align-items: center; justify-content: center;
-      font-size: .85rem; font-weight: 700; flex-shrink: 0;
+      font-size: .78rem; font-weight: 700; flex-shrink: 0; color: #fff;
     }
-    .member-name { flex: 1; margin-left: 10px; font-size: .9rem; }
+    .member-name { flex: 1; margin-left: 10px; font-size: .88rem; }
 
     /* ─── CONSOLE / LOG ─────────────────────────── */
     #console-log {
