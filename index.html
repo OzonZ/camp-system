@@ -1,75 +1,966 @@
 <!DOCTYPE html>
-<html>
+<html lang="th">
 <head>
-    <title>Guild Camp System</title>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <style>
-        body { font-family: sans-serif; background: #f0f2f5; padding: 20px; }
-        .guild-card { background: white; padding: 15px; border-radius: 8px; margin-bottom: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
-        .progress-bg { background: #ddd; height: 10px; border-radius: 5px; }
-        .progress-fill { background: #4CAF50; height: 10px; border-radius: 5px; width: 0%; transition: 0.5s; }
-        .admin-panel { border-top: 2px solid #000; margin-top: 50px; padding-top: 20px; background: #fff3f3; }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>⚔️ Guild Camp System</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;800&family=Sarabun:wght@300;400;600&display=swap" rel="stylesheet"/>
+  <style>
+    :root {
+      --bg: #0d0f1a;
+      --panel: #13162a;
+      --panel2: #1a1f38;
+      --border: #2e3460;
+      --gold: #f0c040;
+      --gold2: #d4a017;
+      --accent: #5e7cff;
+      --green: #3dd68c;
+      --red: #ff5c5c;
+      --purple: #b06fff;
+      --text: #e8eaf6;
+      --muted: #7b82b0;
+      --unity: #4fc3f7;
+      --roblox: #ff7043;
+      --webapp: #66bb6a;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Sarabun', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    /* ─── PARTICLES BG ─────────────────────────── */
+    #particles { position: fixed; inset: 0; pointer-events: none; z-index: 0; overflow: hidden; }
+    .star { position: absolute; border-radius: 50%; background: white; animation: twinkle var(--d, 4s) var(--delay, 0s) infinite alternate; }
+    @keyframes twinkle { from { opacity: 0.05; } to { opacity: 0.5; } }
+
+    /* ─── LAYOUT ───────────────────────────────── */
+    #app { position: relative; z-index: 1; max-width: 1100px; margin: 0 auto; padding: 20px; }
+
+    /* ─── SCREENS ──────────────────────────────── */
+    .screen { display: none; animation: fadeIn .4s ease; }
+    .screen.active { display: block; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+
+    /* ─── HEADER / LOGO ────────────────────────── */
+    .logo-wrap { text-align: center; padding: 40px 0 30px; }
+    .logo-title {
+      font-family: 'Cinzel', serif;
+      font-size: 2.8rem;
+      font-weight: 800;
+      background: linear-gradient(135deg, var(--gold), var(--gold2), var(--accent));
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      letter-spacing: .05em;
+      text-shadow: none;
+    }
+    .logo-sub { color: var(--muted); font-size: .9rem; margin-top: 6px; letter-spacing: .1em; text-transform: uppercase; }
+
+    /* ─── CARD / PANEL ─────────────────────────── */
+    .card {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 20px;
+      margin-bottom: 16px;
+    }
+    .card-title {
+      font-family: 'Cinzel', serif;
+      font-size: 1rem;
+      color: var(--gold);
+      margin-bottom: 14px;
+      letter-spacing: .05em;
+      display: flex; align-items: center; gap: 8px;
+    }
+
+    /* ─── INPUTS / BUTTONS ─────────────────────── */
+    input, select, textarea {
+      background: var(--panel2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--text);
+      font-family: 'Sarabun', sans-serif;
+      font-size: 1rem;
+      padding: 10px 14px;
+      width: 100%;
+      outline: none;
+      transition: border-color .2s;
+    }
+    input:focus, select:focus, textarea:focus { border-color: var(--accent); }
+    textarea { resize: vertical; min-height: 70px; }
+
+    .btn {
+      display: inline-flex; align-items: center; gap: 6px;
+      border: none; border-radius: 8px; cursor: pointer;
+      font-family: 'Sarabun', sans-serif; font-size: .95rem; font-weight: 600;
+      padding: 10px 20px; transition: all .2s;
+    }
+    .btn-gold  { background: linear-gradient(135deg, var(--gold), var(--gold2)); color: #1a1000; }
+    .btn-gold:hover { filter: brightness(1.15); transform: translateY(-1px); }
+    .btn-accent { background: var(--accent); color: white; }
+    .btn-accent:hover { filter: brightness(1.2); }
+    .btn-green  { background: var(--green); color: #001a0e; }
+    .btn-green:hover { filter: brightness(1.15); }
+    .btn-red    { background: var(--red); color: white; }
+    .btn-red:hover { filter: brightness(1.15); }
+    .btn-ghost  { background: transparent; border: 1px solid var(--border); color: var(--muted); }
+    .btn-ghost:hover { border-color: var(--accent); color: var(--accent); }
+    .btn-sm { padding: 6px 12px; font-size: .82rem; }
+    .btn-full { width: 100%; justify-content: center; margin-top: 10px; }
+
+    /* ─── BADGE / TAG ──────────────────────────── */
+    .badge {
+      display: inline-block; border-radius: 20px; padding: 2px 10px;
+      font-size: .75rem; font-weight: 600; letter-spacing: .05em;
+    }
+    .badge-unity  { background: rgba(79,195,247,.2); color: var(--unity); border: 1px solid var(--unity); }
+    .badge-roblox { background: rgba(255,112,67,.2); color: var(--roblox); border: 1px solid var(--roblox); }
+    .badge-webapp { background: rgba(102,187,106,.2); color: var(--webapp); border: 1px solid var(--webapp); }
+    .badge-leader { background: rgba(240,192,64,.2); color: var(--gold); border: 1px solid var(--gold); }
+    .badge-member { background: rgba(94,124,255,.2); color: var(--accent); border: 1px solid var(--accent); }
+
+    /* ─── PROGRESS ─────────────────────────────── */
+    .prog-wrap { background: var(--panel2); border-radius: 99px; height: 10px; overflow: hidden; margin: 8px 0; }
+    .prog-fill  { height: 100%; border-radius: 99px; transition: width .8s cubic-bezier(.4,0,.2,1); }
+    .prog-gold  { background: linear-gradient(90deg, var(--gold2), var(--gold)); }
+    .prog-green { background: linear-gradient(90deg, #1e7e4f, var(--green)); }
+    .prog-accent{ background: linear-gradient(90deg, #2644cc, var(--accent)); }
+
+    /* ─── GRID ─────────────────────────────────── */
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+    .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+    @media(max-width:640px) { .grid-2,.grid-3 { grid-template-columns: 1fr; } }
+
+    /* ─── GUILD SELECT CARDS ───────────────────── */
+    .guild-sel {
+      background: var(--panel2); border: 2px solid var(--border);
+      border-radius: 14px; padding: 18px; cursor: pointer;
+      transition: all .25s; display: flex; flex-direction: column; gap: 8px;
+    }
+    .guild-sel:hover { border-color: var(--gold); transform: translateY(-3px); box-shadow: 0 8px 24px rgba(240,192,64,.15); }
+    .guild-sel.selected { border-color: var(--gold); background: rgba(240,192,64,.05); }
+    .guild-sel-name { font-family: 'Cinzel', serif; font-size: 1rem; color: var(--gold); }
+    .guild-sel-members { font-size: .82rem; color: var(--muted); }
+
+    /* ─── QUEST ITEM ────────────────────────────── */
+    .quest-item {
+      background: var(--panel2); border-radius: 10px;
+      padding: 14px; margin-bottom: 10px;
+      border-left: 3px solid var(--accent);
+      display: flex; align-items: flex-start; gap: 12px;
+    }
+    .quest-item.done { border-left-color: var(--green); opacity: .7; }
+    .quest-icon { font-size: 1.5rem; }
+    .quest-title { font-weight: 600; font-size: .95rem; margin-bottom: 4px; }
+    .quest-desc  { font-size: .82rem; color: var(--muted); }
+    .quest-pts   { font-size: .8rem; color: var(--gold); font-weight: 600; }
+
+    /* ─── CARD ITEM ─────────────────────────────── */
+    .card-item {
+      background: var(--panel2); border-radius: 12px;
+      padding: 14px 12px; text-align: center;
+      border: 1px solid var(--border); position: relative;
+      transition: all .2s;
+    }
+    .card-item:hover { border-color: var(--purple); transform: translateY(-2px); }
+    .card-emoji { font-size: 2.2rem; margin-bottom: 6px; }
+    .card-name  { font-size: .85rem; font-weight: 600; margin-bottom: 4px; }
+    .card-effect{ font-size: .75rem; color: var(--muted); margin-bottom: 8px; }
+    .card-used  { opacity: .4; }
+    .card-used::after {
+      content: '✓ ใช้แล้ว'; position: absolute; inset: 0;
+      display: flex; align-items: center; justify-content: center;
+      background: rgba(0,0,0,.5); border-radius: 12px;
+      font-size: .85rem; color: var(--green); font-weight: 700;
+    }
+
+    /* ─── MEMBER LIST ───────────────────────────── */
+    .member-row {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 10px 12px; background: var(--panel2); border-radius: 8px; margin-bottom: 8px;
+    }
+    .member-avatar {
+      width: 32px; height: 32px; border-radius: 50%;
+      background: linear-gradient(135deg, var(--accent), var(--purple));
+      display: flex; align-items: center; justify-content: center;
+      font-size: .85rem; font-weight: 700; flex-shrink: 0;
+    }
+    .member-name { flex: 1; margin-left: 10px; font-size: .9rem; }
+
+    /* ─── CONSOLE / LOG ─────────────────────────── */
+    #console-log {
+      background: #05070f; border: 1px solid var(--border); border-radius: 10px;
+      padding: 14px; height: 200px; overflow-y: auto;
+      font-family: monospace; font-size: .8rem; color: #7dd3fc;
+    }
+    .log-line { padding: 2px 0; border-bottom: 1px solid rgba(255,255,255,.04); }
+    .log-line .ts { color: var(--muted); margin-right: 8px; }
+    .log-line .act { color: var(--gold); }
+    .log-line .card-use { color: var(--purple); }
+
+    /* ─── LEADERBOARD ───────────────────────────── */
+    .lb-row {
+      display: flex; align-items: center; gap: 12px;
+      padding: 10px 14px; border-radius: 10px; margin-bottom: 8px;
+      background: var(--panel2);
+    }
+    .lb-rank { font-family: 'Cinzel', serif; font-size: 1.1rem; width: 28px; text-align: center; }
+    .lb-rank.r1 { color: var(--gold); } .lb-rank.r2 { color: #aaa; } .lb-rank.r3 { color: #cd7f32; }
+    .lb-name { flex: 1; font-weight: 600; }
+    .lb-pts  { color: var(--gold); font-weight: 700; font-size: 1rem; }
+
+    /* ─── NAV ───────────────────────────────────── */
+    .top-nav {
+      display: flex; align-items: center; justify-content: space-between;
+      background: var(--panel); border: 1px solid var(--border);
+      border-radius: 12px; padding: 10px 18px; margin-bottom: 20px;
+    }
+    .nav-title { font-family: 'Cinzel', serif; font-size: 1rem; color: var(--gold); }
+    .nav-user  { font-size: .85rem; color: var(--muted); }
+
+    /* ─── TAB ───────────────────────────────────── */
+    .tab-bar { display: flex; gap: 6px; margin-bottom: 18px; flex-wrap: wrap; }
+    .tab-btn {
+      padding: 8px 16px; border-radius: 8px; border: 1px solid var(--border);
+      background: var(--panel2); color: var(--muted); cursor: pointer;
+      font-size: .88rem; font-weight: 600; transition: all .2s;
+    }
+    .tab-btn.active { background: var(--accent); color: white; border-color: var(--accent); }
+    .tab-content { display: none; } .tab-content.active { display: block; }
+
+    /* ─── MODAL ─────────────────────────────────── */
+    .modal-overlay {
+      position: fixed; inset: 0; background: rgba(0,0,0,.7);
+      display: flex; align-items: center; justify-content: center;
+      z-index: 100; display: none;
+    }
+    .modal-overlay.open { display: flex; }
+    .modal-box {
+      background: var(--panel); border: 1px solid var(--border);
+      border-radius: 16px; padding: 24px; max-width: 460px; width: 90%;
+      animation: fadeIn .25s;
+    }
+    .modal-title { font-family: 'Cinzel', serif; color: var(--gold); margin-bottom: 16px; font-size: 1.1rem; }
+
+    /* ─── TOAST ─────────────────────────────────── */
+    #toast {
+      position: fixed; bottom: 28px; left: 50%; transform: translateX(-50%) translateY(60px);
+      background: var(--panel); border: 1px solid var(--border);
+      border-radius: 10px; padding: 12px 22px; font-size: .9rem;
+      transition: transform .35s cubic-bezier(.4,0,.2,1); z-index: 999;
+      pointer-events: none; white-space: nowrap;
+    }
+    #toast.show { transform: translateX(-50%) translateY(0); }
+
+    /* ─── ADMIN GUILD CARD ──────────────────────── */
+    .admin-guild-item {
+      background: var(--panel2); border: 1px solid var(--border);
+      border-radius: 12px; padding: 16px; margin-bottom: 12px;
+    }
+    .admin-guild-header {
+      display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px;
+    }
+
+    /* ─── TEAM SECTION ──────────────────────────── */
+    .team-badge {
+      display: inline-block; padding: 4px 14px; border-radius: 20px;
+      font-size: .78rem; font-weight: 700; letter-spacing: .05em;
+      margin-bottom: 6px;
+    }
+
+    /* misc */
+    .row { display: flex; gap: 10px; align-items: center; }
+    .mt-s { margin-top: 8px; }
+    .mt { margin-top: 16px; }
+    .muted { color: var(--muted); font-size: .85rem; }
+    hr.sep { border: none; border-top: 1px solid var(--border); margin: 16px 0; }
+    .empty { text-align: center; padding: 30px; color: var(--muted); }
+    .w-full { width: 100%; }
+    label { display: block; font-size: .82rem; color: var(--muted); margin-bottom: 5px; }
+    .form-group { margin-bottom: 14px; }
+  </style>
 </head>
 <body>
-    <h1>🏕️ Guild Camp Dashboard</h1>
+<div id="particles"></div>
+<div id="app">
 
-    <div id="user-view">
-        <h2>ความคืบหน้ากิลด์ของคุณ</h2>
-        <div id="guild-stats" class="guild-card">กำลังโหลด...</div>
+  <!-- ═══ SCREEN: LOGIN ═════════════════════════════ -->
+  <div id="screen-login" class="screen active">
+    <div class="logo-wrap">
+      <div class="logo-title">⚔️ GUILD CAMP</div>
+      <div class="logo-sub">Camp Activity System</div>
     </div>
-
-    <div id="admin-view" class="admin-panel" style="display:none;">
-        <h2>🛠️ Admin Panel (จัดการเควสและการ์ด)</h2>
-        <div id="admin-controls"></div>
+    <div class="card" style="max-width:420px;margin:0 auto;">
+      <div class="card-title">🧙 เข้าสู่ระบบ</div>
+      <div class="form-group">
+        <label>ชื่อของคุณ</label>
+        <input id="login-name" type="text" placeholder="ใส่ชื่อ-นามสกุลหรือชื่อเล่น…" />
+      </div>
+      <button class="btn btn-gold btn-full" onclick="loginUser()">⚔️ เข้าสู่ระบบ</button>
+      <hr class="sep">
+      <button class="btn btn-ghost btn-full btn-sm" onclick="loginAdmin()">🛠️ เข้าสู่ระบบ Admin</button>
     </div>
+  </div>
 
-    <script>
-        // 1. เชื่อมต่อ Supabase
-        const SUPABASE_URL = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndndXVneW1sYW5tc2hpdWxwaGZ0Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3NzgyMzMyMSwiZXhwIjoyMDkzMzk5MzIxfQ.EtPk0zVaA2n-XqqWyoPfJpN7crBqB8VtyVETaApa5Lo';
-        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndndXVneW1sYW5tc2hpdWxwaGZ0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc4MjMzMjEsImV4cCI6MjA5MzM5OTMyMX0.YTRezbxABMpiWIOmW9HOkGsT_O-nZgzpICZsPjo4r7Q';
-        const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+  <!-- ═══ SCREEN: ADMIN PASSWORD ═══════════════════ -->
+  <div id="screen-admin-pw" class="screen">
+    <div class="logo-wrap"><div class="logo-title">🛠️ ADMIN</div></div>
+    <div class="card" style="max-width:360px;margin:0 auto;">
+      <div class="card-title">🔐 รหัสผ่าน Admin</div>
+      <div class="form-group">
+        <input id="admin-pw-input" type="password" placeholder="รหัสผ่าน…" />
+      </div>
+      <button class="btn btn-red btn-full" onclick="checkAdminPw()">เข้าสู่ระบบ</button>
+      <button class="btn btn-ghost btn-full btn-sm mt-s" onclick="showScreen('screen-login')">← ย้อนกลับ</button>
+    </div>
+  </div>
 
-        // ดึงค่าจาก URL เช่น index.html?id=1 (สมมติเป็น ID ของกิลด์ที่กำลังดู)
-        const urlParams = new URLSearchParams(window.location.search);
-        const myGuildId = urlParams.get('id') || 1; 
-        const isAdmin = urlParams.get('admin') === 'true';
+  <!-- ═══ SCREEN: GUILD SELECT ══════════════════════ -->
+  <div id="screen-guild-select" class="screen">
+    <div class="top-nav">
+      <div class="nav-title">⚔️ GUILD CAMP</div>
+      <div class="nav-user" id="nav-username"></div>
+    </div>
+    <div class="card-title" style="margin-bottom:16px;">🏰 เลือกกิลด์ของคุณ</div>
+    <div id="guild-list-select" class="grid-3"></div>
+    <button class="btn btn-gold btn-full mt" onclick="showCreateGuild()">➕ สร้างกิลด์ใหม่</button>
+  </div>
 
-        async function loadData() {
-            // ดึงข้อมูลกิลด์
-            const { data: guild } = await supabase.from('guilds').select('*').eq('id', myGuildId).single();
-            
-            // แสดงผลหน้าจอ User
-            if (guild) {
-                document.getElementById('guild-stats').innerHTML = `
-                    <h3>กิลด์: ${guild.name} (${guild.type})</h3>
-                    <p>คะแนนสะสม: ${guild.points} แต้ม</p>
-                    <div class="progress-bg"><div class="progress-fill" style="width: ${guild.points}%"></div></div>
-                `;
-            }
+  <!-- ═══ SCREEN: CREATE GUILD ══════════════════════ -->
+  <div id="screen-create-guild" class="screen">
+    <div class="top-nav">
+      <button class="btn btn-ghost btn-sm" onclick="showScreen('screen-guild-select')">← ย้อนกลับ</button>
+      <div class="nav-title">สร้างกิลด์</div>
+      <div></div>
+    </div>
+    <div class="card" style="max-width:500px;margin:0 auto;">
+      <div class="card-title">🏰 สร้างกิลด์ใหม่</div>
+      <div class="form-group">
+        <label>ชื่อกิลด์</label>
+        <input id="new-guild-name" type="text" placeholder="ชื่อกิลด์…" />
+      </div>
+      <div class="form-group">
+        <label>ประเภทกิลด์</label>
+        <select id="new-guild-type">
+          <option value="Unity">🎮 Unity</option>
+          <option value="Roblox">🟠 Roblox</option>
+          <option value="WebApp">🌐 WebApp</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>คำอธิบายกิลด์ (ไม่จำเป็น)</label>
+        <textarea id="new-guild-desc" placeholder="อธิบายกิลด์…"></textarea>
+      </div>
+      <button class="btn btn-gold btn-full" onclick="createGuild()">✨ สร้างกิลด์</button>
+    </div>
+  </div>
 
-            // ถ้าเป็น Admin ให้แสดงแผงควบคุม
-            if (isAdmin) {
-                document.getElementById('admin-view').style.display = 'block';
-                loadAdminControls();
-            }
-        }
+  <!-- ═══ SCREEN: MEMBER DASHBOARD ══════════════════ -->
+  <div id="screen-member" class="screen">
+    <div class="top-nav">
+      <div class="nav-title" id="member-guild-name-nav">⚔️ Guild</div>
+      <div style="display:flex;align-items:center;gap:8px;">
+        <span class="nav-user" id="member-nav-user"></span>
+        <button class="btn btn-ghost btn-sm" onclick="logout()">ออก</button>
+      </div>
+    </div>
+    <div class="tab-bar">
+      <button class="tab-btn active" onclick="showTab('tab-quests','member')">📜 เควส</button>
+      <button class="tab-btn" onclick="showTab('tab-members','member')">👥 สมาชิก</button>
+      <button class="tab-btn" onclick="showTab('tab-cards','member')">🃏 การ์ด</button>
+      <button class="tab-btn" onclick="showTab('tab-lb','member')">🏆 อันดับ</button>
+    </div>
+    <div id="tab-quests" class="tab-content active">
+      <div class="card">
+        <div class="card-title">📜 เควสของกิลด์</div>
+        <div id="member-quests"></div>
+      </div>
+    </div>
+    <div id="tab-members" class="tab-content">
+      <div class="card">
+        <div class="card-title">👥 สมาชิกในกิลด์</div>
+        <div id="member-members"></div>
+      </div>
+    </div>
+    <div id="tab-cards" class="tab-content">
+      <div class="card">
+        <div class="card-title">🃏 การ์ดของกิลด์ <span id="cards-leader-only" class="muted" style="font-size:.8rem;"></span></div>
+        <div id="member-cards" class="grid-3"></div>
+      </div>
+    </div>
+    <div id="tab-lb" class="tab-content">
+      <div class="card">
+        <div class="card-title">🏆 อันดับกิลด์</div>
+        <div id="member-lb"></div>
+      </div>
+    </div>
+  </div>
 
-        async function loadAdminControls() {
-            const { data: allGuilds } = await supabase.from('guilds').select('*');
-            let html = '';
-            allGuilds.forEach(g => {
-                html += `<div>${g.name} <button onclick="addPoint(${g.id}, ${g.points})">+10 แต้ม</button></div>`;
-            });
-            document.getElementById('admin-controls').innerHTML = html;
-        }
+  <!-- ═══ SCREEN: ADMIN DASHBOARD ═══════════════════ -->
+  <div id="screen-admin" class="screen">
+    <div class="top-nav">
+      <div class="nav-title">🛠️ ADMIN PANEL</div>
+      <button class="btn btn-red btn-sm" onclick="logout()">ออก</button>
+    </div>
+    <div class="tab-bar">
+      <button class="tab-btn active" onclick="showTab('a-tab-guilds','admin')">🏰 กิลด์ทั้งหมด</button>
+      <button class="tab-btn" onclick="showTab('a-tab-quests','admin')">📜 จัดการเควส</button>
+      <button class="tab-btn" onclick="showTab('a-tab-cards','admin')">🃏 จัดการการ์ด</button>
+      <button class="tab-btn" onclick="showTab('a-tab-log','admin')">📡 Console Log</button>
+      <button class="tab-btn" onclick="showTab('a-tab-lb','admin')">🏆 อันดับ</button>
+    </div>
+    <!-- Admin: guilds -->
+    <div id="a-tab-guilds" class="tab-content active">
+      <div id="admin-guilds-list"></div>
+    </div>
+    <!-- Admin: quests -->
+    <div id="a-tab-quests" class="tab-content">
+      <div class="card">
+        <div class="card-title">➕ สร้างเควสใหม่</div>
+        <div class="form-group"><label>ชื่อเควส</label><input id="q-title" placeholder="ชื่อเควส…"/></div>
+        <div class="form-group"><label>คำอธิบาย</label><textarea id="q-desc" placeholder="รายละเอียด…"></textarea></div>
+        <div class="grid-2">
+          <div class="form-group"><label>แต้มรางวัล</label><input id="q-pts" type="number" value="50" min="0"/></div>
+          <div class="form-group"><label>ไอคอน (emoji)</label><input id="q-icon" value="⚔️"/></div>
+        </div>
+        <div class="form-group">
+          <label>มอบให้กิลด์ (เว้นว่างหมายถึงทุกกิลด์)</label>
+          <select id="q-guild"><option value="">— ทุกกิลด์ —</option></select>
+        </div>
+        <button class="btn btn-gold btn-full" onclick="adminCreateQuest()">✨ สร้างเควส</button>
+      </div>
+      <div class="card">
+        <div class="card-title">📜 เควสทั้งหมด</div>
+        <div id="admin-quest-list"></div>
+      </div>
+    </div>
+    <!-- Admin: cards -->
+    <div id="a-tab-cards" class="tab-content">
+      <div class="card">
+        <div class="card-title">➕ มอบการ์ดให้กิลด์</div>
+        <div class="grid-2">
+          <div class="form-group"><label>กิลด์</label><select id="c-guild"></select></div>
+          <div class="form-group"><label>การ์ด</label><select id="c-card"></select></div>
+        </div>
+        <button class="btn btn-purple btn-full" style="background:var(--purple);color:white;" onclick="adminGiveCard()">🎁 มอบการ์ด</button>
+      </div>
+      <div class="card">
+        <div class="card-title">🃏 การ์ดทั้งหมดในระบบ</div>
+        <div id="admin-all-cards" class="grid-3"></div>
+      </div>
+    </div>
+    <!-- Admin: log -->
+    <div id="a-tab-log" class="tab-content">
+      <div class="card">
+        <div class="card-title">📡 Activity Console</div>
+        <div id="console-log"></div>
+        <button class="btn btn-ghost btn-sm mt-s" onclick="loadAdminLog()">↻ รีเฟรช</button>
+      </div>
+    </div>
+    <!-- Admin: leaderboard -->
+    <div id="a-tab-lb" class="tab-content">
+      <div class="card">
+        <div class="card-title">🏆 อันดับกิลด์</div>
+        <div id="admin-lb"></div>
+      </div>
+    </div>
+  </div>
 
-        async function addPoint(id, currentPoint) {
-            await supabase.from('guilds').update({ points: currentPoint + 10 }).eq('id', id);
-            location.reload(); // รีโหลดหน้าจอเพื่อดูค่าใหม่
-        }
+</div><!-- #app -->
 
-        loadData();
-    </script>
+<!-- MODAL: use card confirm -->
+<div class="modal-overlay" id="modal-use-card">
+  <div class="modal-box">
+    <div class="modal-title">🃏 ยืนยันการใช้การ์ด</div>
+    <p id="modal-card-desc" style="margin-bottom:16px;color:var(--muted);font-size:.9rem;"></p>
+    <div class="row">
+      <button class="btn btn-gold w-full" onclick="confirmUseCard()">✅ ใช้การ์ด</button>
+      <button class="btn btn-ghost w-full" onclick="closeModal()">ยกเลิก</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+// ──────────────────────────────────────────────
+//  SUPABASE INIT
+// ──────────────────────────────────────────────
+const SUPA_URL = 'https://wguugymlanmshiulphft.supabase.co';
+const SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndndXVneW1sYW5tc2hpdWxwaGZ0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc4MjMzMjEsImV4cCI6MjA5MzM5OTMyMX0.YTRezbxABMpiWIOmW9HOkGsT_O-nZgzpICZsPjo4r7Q';
+const db = window.supabase.createClient(SUPA_URL, SUPA_KEY);
+
+const ADMIN_PASSWORD = 'camp2025';
+
+// ──────────────────────────────────────────────
+//  STATE
+// ──────────────────────────────────────────────
+let state = {
+  name: '',
+  role: '', // 'admin' | 'leader' | 'member'
+  guildId: null,
+  guildData: null,
+  pendingCardId: null,
+  pendingGuildCardId: null,
+};
+
+// ──────────────────────────────────────────────
+//  STARS BACKGROUND
+// ──────────────────────────────────────────────
+(function(){
+  const c = document.getElementById('particles');
+  for (let i = 0; i < 80; i++) {
+    const s = document.createElement('div');
+    s.className = 'star';
+    const sz = Math.random() * 2.5 + 0.5;
+    s.style.cssText = `width:${sz}px;height:${sz}px;top:${Math.random()*100}%;left:${Math.random()*100}%;--d:${(Math.random()*5+2).toFixed(1)}s;--delay:${(Math.random()*5).toFixed(1)}s`;
+    c.appendChild(s);
+  }
+})();
+
+// ──────────────────────────────────────────────
+//  SCREENS & TABS
+// ──────────────────────────────────────────────
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  window.scrollTo(0, 0);
+}
+
+function showTab(id, group) {
+  const panel = document.getElementById(group === 'admin' ? 'screen-admin' : 'screen-member');
+  panel.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+  panel.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  event.currentTarget.classList.add('active');
+  if (id === 'tab-cards') loadMemberCards();
+  if (id === 'tab-members') loadMemberList();
+  if (id === 'tab-quests') loadMemberQuests();
+  if (id === 'tab-lb') loadLeaderboard('member-lb');
+  if (id === 'a-tab-guilds') loadAdminGuilds();
+  if (id === 'a-tab-quests') loadAdminQuestTab();
+  if (id === 'a-tab-cards') loadAdminCardsTab();
+  if (id === 'a-tab-log') loadAdminLog();
+  if (id === 'a-tab-lb') loadLeaderboard('admin-lb');
+}
+
+// ──────────────────────────────────────────────
+//  TOAST
+// ──────────────────────────────────────────────
+function toast(msg, color = 'var(--green)') {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.style.color = color;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+// ──────────────────────────────────────────────
+//  MODAL
+// ──────────────────────────────────────────────
+function closeModal() {
+  document.getElementById('modal-use-card').classList.remove('open');
+}
+
+// ──────────────────────────────────────────────
+//  LOGIN
+// ──────────────────────────────────────────────
+async function loginUser() {
+  const name = document.getElementById('login-name').value.trim();
+  if (!name) return toast('กรุณาใส่ชื่อก่อน', 'var(--red)');
+  state.name = name;
+  document.getElementById('nav-username').textContent = name;
+  document.getElementById('member-nav-user').textContent = name;
+  showScreen('screen-guild-select');
+  loadGuildList();
+}
+
+function loginAdmin() { showScreen('screen-admin-pw'); }
+
+function checkAdminPw() {
+  const pw = document.getElementById('admin-pw-input').value;
+  if (pw === ADMIN_PASSWORD) {
+    state.role = 'admin';
+    showScreen('screen-admin');
+    loadAdminGuilds();
+    loadAdminQuestTab();
+    loadAdminCardsTab();
+  } else {
+    toast('รหัสผ่านไม่ถูกต้อง', 'var(--red)');
+  }
+}
+
+function logout() {
+  state = { name:'', role:'', guildId:null, guildData:null, pendingCardId:null, pendingGuildCardId:null };
+  showScreen('screen-login');
+}
+
+// ──────────────────────────────────────────────
+//  GUILD SELECT
+// ──────────────────────────────────────────────
+async function loadGuildList() {
+  const wrap = document.getElementById('guild-list-select');
+  wrap.innerHTML = '<div class="muted">กำลังโหลด…</div>';
+  const { data: guilds } = await db.from('guilds').select('*, members(count)');
+  if (!guilds || guilds.length === 0) {
+    wrap.innerHTML = '<div class="empty">ยังไม่มีกิลด์ — สร้างกิลด์แรกได้เลย!</div>';
+    return;
+  }
+  wrap.innerHTML = guilds.map(g => `
+    <div class="guild-sel" onclick="joinGuild(${g.id})">
+      <div class="guild-sel-name">${g.name}</div>
+      <span class="badge badge-${g.type?.toLowerCase()}">${typeIcon(g.type)} ${g.type}</span>
+      <div class="guild-sel-members muted">👥 ${g.members?.[0]?.count || 0} คน</div>
+      ${g.description ? `<div class="muted" style="font-size:.8rem;">${g.description}</div>` : ''}
+    </div>
+  `).join('');
+}
+
+function typeIcon(t) {
+  if (t==='Unity') return '🎮';
+  if (t==='Roblox') return '🟠';
+  if (t==='WebApp') return '🌐';
+  return '🏰';
+}
+
+function showCreateGuild() { showScreen('screen-create-guild'); }
+
+async function createGuild() {
+  const name = document.getElementById('new-guild-name').value.trim();
+  const type = document.getElementById('new-guild-type').value;
+  const desc = document.getElementById('new-guild-desc').value.trim();
+  if (!name) return toast('กรุณาใส่ชื่อกิลด์', 'var(--red)');
+
+  const { data: g, error } = await db.from('guilds').insert({ name, type, description: desc, points: 0 }).select().single();
+  if (error) return toast('เกิดข้อผิดพลาด: ' + error.message, 'var(--red)');
+
+  // creator = leader
+  const { data: m } = await db.from('members').insert({ name: state.name, guild_id: g.id, role: 'leader' }).select().single();
+  await logActivity(state.name, `สร้างกิลด์ "${name}" (${type})`, g.id, 'create_guild');
+  state.guildId = g.id; state.guildData = g; state.role = 'leader';
+  enterMemberDashboard(g, m);
+}
+
+async function joinGuild(guildId) {
+  // check if already member
+  const { data: existing } = await db.from('members').select('*').eq('guild_id', guildId).eq('name', state.name).maybeSingle();
+  const { data: g } = await db.from('guilds').select('*').eq('id', guildId).single();
+  let member = existing;
+  if (!existing) {
+    const { data: m } = await db.from('members').insert({ name: state.name, guild_id: guildId, role: 'member' }).select().single();
+    member = m;
+    await logActivity(state.name, `เข้าร่วมกิลด์ "${g.name}"`, guildId, 'join_guild');
+  }
+  state.guildId = guildId; state.guildData = g;
+  state.role = member?.role === 'leader' ? 'leader' : 'member';
+  enterMemberDashboard(g, member);
+}
+
+function enterMemberDashboard(g, member) {
+  document.getElementById('member-guild-name-nav').textContent = `${typeIcon(g.type)} ${g.name}`;
+  document.getElementById('member-nav-user').textContent = `${state.name} · ${state.role === 'leader' ? '👑 หัวกิลด์' : '⚔️ สมาชิก'}`;
+  showScreen('screen-member');
+  loadMemberQuests();
+}
+
+// ──────────────────────────────────────────────
+//  MEMBER: QUESTS
+// ──────────────────────────────────────────────
+async function loadMemberQuests() {
+  const wrap = document.getElementById('member-quests');
+  if (!wrap) return;
+  wrap.innerHTML = '<div class="muted">กำลังโหลด…</div>';
+
+  const { data: quests } = await db.from('quests')
+    .select('*, guild_quests(id, completed, progress)')
+    .or(`guild_id.is.null,guild_id.eq.${state.guildId}`);
+
+  if (!quests || quests.length === 0) {
+    wrap.innerHTML = '<div class="empty">ยังไม่มีเควสจาก Admin</div>';
+    return;
+  }
+
+  wrap.innerHTML = quests.map(q => {
+    const gq = q.guild_quests?.[0];
+    const done = gq?.completed;
+    const prog = gq?.progress ?? 0;
+    return `
+      <div class="quest-item ${done ? 'done' : ''}">
+        <div class="quest-icon">${q.icon || '⚔️'}</div>
+        <div style="flex:1">
+          <div class="quest-title">${q.title}</div>
+          <div class="quest-desc">${q.description || ''}</div>
+          <div class="quest-pts">💎 ${q.points} แต้ม</div>
+          ${!done ? `<div class="prog-wrap mt-s"><div class="prog-fill prog-accent" style="width:${prog}%"></div></div>` : `<div class="muted mt-s">✅ เสร็จแล้ว</div>`}
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+// ──────────────────────────────────────────────
+//  MEMBER: MEMBERS LIST
+// ──────────────────────────────────────────────
+async function loadMemberList() {
+  const wrap = document.getElementById('member-members');
+  if (!wrap) return;
+  const { data: members } = await db.from('members').select('*').eq('guild_id', state.guildId);
+  if (!members || members.length === 0) { wrap.innerHTML = '<div class="empty">ไม่พบสมาชิก</div>'; return; }
+  wrap.innerHTML = members.map(m => `
+    <div class="member-row">
+      <div class="member-avatar">${m.name[0].toUpperCase()}</div>
+      <div class="member-name">${m.name}</div>
+      <span class="badge ${m.role==='leader'?'badge-leader':'badge-member'}">${m.role==='leader'?'👑 หัวกิลด์':'⚔️ สมาชิก'}</span>
+    </div>
+  `).join('');
+}
+
+// ──────────────────────────────────────────────
+//  MEMBER: CARDS
+// ──────────────────────────────────────────────
+async function loadMemberCards() {
+  const wrap = document.getElementById('member-cards');
+  const leaderNote = document.getElementById('cards-leader-only');
+  if (!wrap) return;
+  wrap.innerHTML = '<div class="muted">กำลังโหลด…</div>';
+
+  if (state.role !== 'leader') {
+    leaderNote.textContent = '(เฉพาะหัวกิลด์เท่านั้นที่ใช้การ์ดได้)';
+  }
+
+  const { data: gc } = await db.from('guild_cards')
+    .select('*, cards(*)')
+    .eq('guild_id', state.guildId);
+
+  if (!gc || gc.length === 0) {
+    wrap.innerHTML = '<div class="empty" style="grid-column:1/-1">ยังไม่มีการ์ด</div>';
+    return;
+  }
+
+  wrap.innerHTML = gc.map(item => {
+    const c = item.cards;
+    const used = item.used;
+    return `
+      <div class="card-item ${used ? 'card-used' : ''}">
+        <div class="card-emoji">${c.icon || '🃏'}</div>
+        <div class="card-name">${c.name}</div>
+        <div class="card-effect">${c.effect || ''}</div>
+        ${state.role === 'leader' && !used
+          ? `<button class="btn btn-sm btn-accent btn-full" onclick="openUseCard(${item.id},'${c.name}','${c.effect||''}')">✨ ใช้การ์ด</button>`
+          : ''}
+      </div>
+    `;
+  }).join('');
+}
+
+function openUseCard(gcId, name, effect) {
+  state.pendingGuildCardId = gcId;
+  document.getElementById('modal-card-desc').textContent = `"${name}" — ${effect}`;
+  document.getElementById('modal-use-card').classList.add('open');
+}
+
+async function confirmUseCard() {
+  closeModal();
+  const gcId = state.pendingGuildCardId;
+  await db.from('guild_cards').update({ used: true }).eq('id', gcId);
+  const { data: gc } = await db.from('guild_cards').select('cards(name)').eq('id', gcId).single();
+  const cardName = gc?.cards?.name || 'การ์ด';
+  await logActivity(state.name, `ใช้การ์ด "${cardName}"`, state.guildId, 'use_card', cardName);
+  toast(`✨ ใช้การ์ด "${cardName}" แล้ว!`, 'var(--purple)');
+  loadMemberCards();
+}
+
+// ──────────────────────────────────────────────
+//  LEADERBOARD (shared)
+// ──────────────────────────────────────────────
+async function loadLeaderboard(targetId) {
+  const wrap = document.getElementById(targetId);
+  if (!wrap) return;
+  const { data: guilds } = await db.from('guilds').select('*').order('points', { ascending: false });
+  if (!guilds || guilds.length === 0) { wrap.innerHTML = '<div class="empty">ยังไม่มีข้อมูล</div>'; return; }
+  const rankClass = ['r1','r2','r3'];
+  const rankEmoji = ['🥇','🥈','🥉'];
+  wrap.innerHTML = guilds.map((g, i) => `
+    <div class="lb-row">
+      <div class="lb-rank ${rankClass[i]||''}">${rankEmoji[i]||i+1}</div>
+      <span class="badge badge-${g.type?.toLowerCase()}">${typeIcon(g.type)}</span>
+      <div class="lb-name">${g.name}</div>
+      <div class="lb-pts">${g.points} pts</div>
+    </div>
+    <div class="prog-wrap" style="margin-bottom:8px;">
+      <div class="prog-fill prog-gold" style="width:${Math.min(g.points,100)}%"></div>
+    </div>
+  `).join('');
+}
+
+// ──────────────────────────────────────────────
+//  ADMIN: GUILDS
+// ──────────────────────────────────────────────
+async function loadAdminGuilds() {
+  const wrap = document.getElementById('admin-guilds-list');
+  if (!wrap) return;
+  wrap.innerHTML = '<div class="muted">กำลังโหลด…</div>';
+  const { data: guilds } = await db.from('guilds').select('*, members(*)');
+  if (!guilds || guilds.length === 0) { wrap.innerHTML = '<div class="empty">ยังไม่มีกิลด์</div>'; return; }
+  wrap.innerHTML = guilds.map(g => {
+    const members = g.members || [];
+    const leader = members.find(m => m.role === 'leader');
+    return `
+      <div class="admin-guild-item">
+        <div class="admin-guild-header">
+          <div>
+            <span style="font-family:'Cinzel',serif;font-size:1rem;color:var(--gold);">${g.name}</span>
+            <span class="badge badge-${g.type?.toLowerCase()}" style="margin-left:8px;">${typeIcon(g.type)} ${g.type}</span>
+          </div>
+          <div style="display:flex;gap:8px;align-items:center;">
+            <span style="color:var(--gold);font-weight:700;">${g.points} pts</span>
+            <button class="btn btn-green btn-sm" onclick="addPoints(${g.id},${g.points},10)">+10</button>
+            <button class="btn btn-sm" style="background:var(--accent);color:white;" onclick="addPoints(${g.id},${g.points},25)">+25</button>
+            <button class="btn btn-red btn-sm" onclick="addPoints(${g.id},${g.points},-10)">-10</button>
+          </div>
+        </div>
+        <div class="prog-wrap"><div class="prog-fill prog-gold" style="width:${Math.min(g.points,100)}%"></div></div>
+        ${leader ? `<div class="muted mt-s">👑 หัวกิลด์: ${leader.name}</div>` : ''}
+        <div class="mt-s">
+          ${members.map(m => `
+            <span class="badge ${m.role==='leader'?'badge-leader':'badge-member'}" style="margin:2px;">${m.name}</span>
+          `).join('')}
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+async function addPoints(guildId, current, delta) {
+  const newPts = Math.max(0, current + delta);
+  await db.from('guilds').update({ points: newPts }).eq('id', guildId);
+  await logActivity('Admin', `${delta > 0 ? '+' : ''}${delta} แต้มให้กิลด์ id=${guildId}`, guildId, 'admin_points');
+  toast(`${delta > 0 ? '+' : ''}${delta} แต้ม!`, delta > 0 ? 'var(--green)' : 'var(--red)');
+  loadAdminGuilds();
+  loadLeaderboard('admin-lb');
+}
+
+// ──────────────────────────────────────────────
+//  ADMIN: QUESTS
+// ──────────────────────────────────────────────
+async function loadAdminQuestTab() {
+  // populate guild dropdown
+  const sel = document.getElementById('q-guild');
+  if (sel) {
+    const { data: guilds } = await db.from('guilds').select('id,name');
+    sel.innerHTML = '<option value="">— ทุกกิลด์ —</option>' +
+      (guilds||[]).map(g => `<option value="${g.id}">${g.name}</option>`).join('');
+  }
+  loadAdminQuestList();
+}
+
+async function loadAdminQuestList() {
+  const wrap = document.getElementById('admin-quest-list');
+  if (!wrap) return;
+  const { data: quests } = await db.from('quests').select('*, guilds(name)').order('created_at', { ascending: false });
+  if (!quests || quests.length === 0) { wrap.innerHTML = '<div class="empty">ยังไม่มีเควส</div>'; return; }
+  wrap.innerHTML = quests.map(q => `
+    <div class="quest-item">
+      <div class="quest-icon">${q.icon||'⚔️'}</div>
+      <div style="flex:1">
+        <div class="quest-title">${q.title}</div>
+        <div class="quest-desc">${q.description||''}</div>
+        <div class="quest-pts">💎 ${q.points} แต้ม · ${q.guild_id ? `กิลด์: ${q.guilds?.name}` : 'ทุกกิลด์'}</div>
+      </div>
+      <button class="btn btn-red btn-sm" onclick="deleteQuest(${q.id})">ลบ</button>
+    </div>
+  `).join('');
+}
+
+async function adminCreateQuest() {
+  const title = document.getElementById('q-title').value.trim();
+  const desc = document.getElementById('q-desc').value.trim();
+  const pts = parseInt(document.getElementById('q-pts').value) || 50;
+  const icon = document.getElementById('q-icon').value.trim() || '⚔️';
+  const guildId = document.getElementById('q-guild').value || null;
+  if (!title) return toast('กรุณาใส่ชื่อเควส', 'var(--red)');
+  await db.from('quests').insert({ title, description: desc, points: pts, icon, guild_id: guildId });
+  await logActivity('Admin', `สร้างเควส "${title}"`, null, 'create_quest');
+  toast('✨ สร้างเควสสำเร็จ!');
+  loadAdminQuestList();
+  document.getElementById('q-title').value = '';
+  document.getElementById('q-desc').value = '';
+}
+
+async function deleteQuest(id) {
+  await db.from('quests').delete().eq('id', id);
+  toast('ลบเควสแล้ว', 'var(--muted)');
+  loadAdminQuestList();
+}
+
+// ──────────────────────────────────────────────
+//  ADMIN: CARDS
+// ──────────────────────────────────────────────
+async function loadAdminCardsTab() {
+  const cGuild = document.getElementById('c-guild');
+  const cCard = document.getElementById('c-card');
+  if (!cGuild || !cCard) return;
+  const { data: guilds } = await db.from('guilds').select('id,name');
+  cGuild.innerHTML = (guilds||[]).map(g=>`<option value="${g.id}">${g.name}</option>`).join('');
+  const { data: cards } = await db.from('cards').select('*');
+  cCard.innerHTML = (cards||[]).map(c=>`<option value="${c.id}">${c.icon} ${c.name}</option>`).join('');
+  // show all cards
+  const wrap = document.getElementById('admin-all-cards');
+  if (wrap && cards) {
+    wrap.innerHTML = cards.map(c => `
+      <div class="card-item">
+        <div class="card-emoji">${c.icon||'🃏'}</div>
+        <div class="card-name">${c.name}</div>
+        <div class="card-effect">${c.effect||''}</div>
+      </div>
+    `).join('');
+  }
+}
+
+async function adminGiveCard() {
+  const guildId = document.getElementById('c-guild').value;
+  const cardId = document.getElementById('c-card').value;
+  if (!guildId || !cardId) return toast('เลือกกิลด์และการ์ดก่อน', 'var(--red)');
+  const { error } = await db.from('guild_cards').insert({ guild_id: guildId, card_id: cardId, used: false });
+  if (error) return toast('เกิดข้อผิดพลาด: '+error.message, 'var(--red)');
+  const { data: card } = await db.from('cards').select('name').eq('id', cardId).single();
+  const { data: guild } = await db.from('guilds').select('name').eq('id', guildId).single();
+  await logActivity('Admin', `มอบการ์ด "${card?.name}" ให้กิลด์ "${guild?.name}"`, guildId, 'give_card', card?.name);
+  toast(`🎁 มอบการ์ดให้ "${guild?.name}" แล้ว!`);
+}
+
+// ──────────────────────────────────────────────
+//  ADMIN: LOG
+// ──────────────────────────────────────────────
+async function loadAdminLog() {
+  const wrap = document.getElementById('console-log');
+  if (!wrap) return;
+  const { data: logs } = await db.from('activity_log').select('*').order('created_at', { ascending: false }).limit(80);
+  if (!logs || logs.length === 0) { wrap.innerHTML = '<div class="log-line">ยังไม่มี activity</div>'; return; }
+  wrap.innerHTML = logs.map(l => {
+    const ts = new Date(l.created_at).toLocaleTimeString('th-TH');
+    const isCard = l.action_type === 'use_card';
+    return `<div class="log-line">
+      <span class="ts">[${ts}]</span>
+      <span class="${isCard ? 'card-use' : 'act'}">${l.actor_name}</span>
+      <span style="color:var(--text);"> — ${l.description}</span>
+    </div>`;
+  }).join('');
+}
+
+// ──────────────────────────────────────────────
+//  LOG HELPER
+// ──────────────────────────────────────────────
+async function logActivity(actor, desc, guildId, type, extra) {
+  await db.from('activity_log').insert({
+    actor_name: actor,
+    description: desc,
+    guild_id: guildId || null,
+    action_type: type || 'general',
+    extra_data: extra || null,
+  });
+}
+</script>
 </body>
 </html>
