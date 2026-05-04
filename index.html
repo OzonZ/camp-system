@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Guild Camp System</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        body { font-family: sans-serif; background: #f0f2f5; padding: 20px; }
+        .guild-card { background: white; padding: 15px; border-radius: 8px; margin-bottom: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .progress-bg { background: #ddd; height: 10px; border-radius: 5px; }
+        .progress-fill { background: #4CAF50; height: 10px; border-radius: 5px; width: 0%; transition: 0.5s; }
+        .admin-panel { border-top: 2px solid #000; margin-top: 50px; padding-top: 20px; background: #fff3f3; }
+    </style>
+</head>
+<body>
+    <h1>🏕️ Guild Camp Dashboard</h1>
+
+    <div id="user-view">
+        <h2>ความคืบหน้ากิลด์ของคุณ</h2>
+        <div id="guild-stats" class="guild-card">กำลังโหลด...</div>
+    </div>
+
+    <div id="admin-view" class="admin-panel" style="display:none;">
+        <h2>🛠️ Admin Panel (จัดการเควสและการ์ด)</h2>
+        <div id="admin-controls"></div>
+    </div>
+
+    <script>
+        // 1. เชื่อมต่อ Supabase
+        const SUPABASE_URL = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndndXVneW1sYW5tc2hpdWxwaGZ0Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3NzgyMzMyMSwiZXhwIjoyMDkzMzk5MzIxfQ.EtPk0zVaA2n-XqqWyoPfJpN7crBqB8VtyVETaApa5Lo';
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndndXVneW1sYW5tc2hpdWxwaGZ0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc4MjMzMjEsImV4cCI6MjA5MzM5OTMyMX0.YTRezbxABMpiWIOmW9HOkGsT_O-nZgzpICZsPjo4r7Q';
+        const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        // ดึงค่าจาก URL เช่น index.html?id=1 (สมมติเป็น ID ของกิลด์ที่กำลังดู)
+        const urlParams = new URLSearchParams(window.location.search);
+        const myGuildId = urlParams.get('id') || 1; 
+        const isAdmin = urlParams.get('admin') === 'true';
+
+        async function loadData() {
+            // ดึงข้อมูลกิลด์
+            const { data: guild } = await supabase.from('guilds').select('*').eq('id', myGuildId).single();
+            
+            // แสดงผลหน้าจอ User
+            if (guild) {
+                document.getElementById('guild-stats').innerHTML = `
+                    <h3>กิลด์: ${guild.name} (${guild.type})</h3>
+                    <p>คะแนนสะสม: ${guild.points} แต้ม</p>
+                    <div class="progress-bg"><div class="progress-fill" style="width: ${guild.points}%"></div></div>
+                `;
+            }
+
+            // ถ้าเป็น Admin ให้แสดงแผงควบคุม
+            if (isAdmin) {
+                document.getElementById('admin-view').style.display = 'block';
+                loadAdminControls();
+            }
+        }
+
+        async function loadAdminControls() {
+            const { data: allGuilds } = await supabase.from('guilds').select('*');
+            let html = '';
+            allGuilds.forEach(g => {
+                html += `<div>${g.name} <button onclick="addPoint(${g.id}, ${g.points})">+10 แต้ม</button></div>`;
+            });
+            document.getElementById('admin-controls').innerHTML = html;
+        }
+
+        async function addPoint(id, currentPoint) {
+            await supabase.from('guilds').update({ points: currentPoint + 10 }).eq('id', id);
+            location.reload(); // รีโหลดหน้าจอเพื่อดูค่าใหม่
+        }
+
+        loadData();
+    </script>
+</body>
+</html>
