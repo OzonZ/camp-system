@@ -230,6 +230,35 @@
     .tab-btn.active { background: var(--accent); color: white; border-color: var(--accent); }
     .tab-content { display: none; } .tab-content.active { display: block; }
 
+    /* ─── TEAM / GROUP ──────────────────────────── */
+    .team-item {
+      background: var(--panel2); border-radius: 12px; padding: 14px;
+      border-left: 3px solid var(--accent); margin-bottom: 12px;
+    }
+    .team-header { font-weight: 600; margin-bottom: 8px; color: var(--gold); }
+    .team-members-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(80px, 1fr)); gap: 8px; }
+    .team-member-badge { background: var(--panel); padding: 8px; border-radius: 8px; text-align: center; font-size: .8rem; }
+
+    /* ─── PROGRESS BAR ──────────────────────────── */
+    .progress-section { background: var(--panel2); border-radius: 10px; padding: 14px; margin-bottom: 12px; }
+    .progress-title { font-weight: 600; font-size: .9rem; margin-bottom: 8px; color: var(--gold); }
+    .progress-item { margin-bottom: 10px; }
+    .progress-label { display: flex; justify-content: space-between; font-size: .8rem; margin-bottom: 4px; }
+
+    /* ─── COMPETITION ────────────────────────────── */
+    .competition-card {
+      background: var(--panel2); border-radius: 12px; padding: 14px;
+      border-left: 3px solid var(--purple); margin-bottom: 12px;
+    }
+    .comp-title { font-weight: 700; color: var(--purple); margin-bottom: 8px; }
+    .comp-guilds { display: grid; gap: 6px; }
+    .comp-guild-row {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 8px 10px; background: rgba(0,0,0,.3); border-radius: 6px;
+    }
+    .comp-guild-name { font-weight: 600; }
+    .comp-guild-score { color: var(--gold); font-weight: 700; }
+
     /* ─── MODAL ─────────────────────────────────── */
     .modal-overlay {
       position: fixed; inset: 0; background: rgba(0,0,0,.7);
@@ -368,8 +397,10 @@
     </div>
     <div class="tab-bar">
       <button class="tab-btn active" onclick="showTab('tab-quests','member')">📜 เควส</button>
-      <button class="tab-btn" onclick="showTab('tab-members','member')">👥 สมาชิก</button>
+      <button class="tab-btn" onclick="showTab('tab-teams','member')">👥 กลุ่มของฉัน</button>
+      <button class="tab-btn" onclick="showTab('tab-members','member')">⚔️ สมาชิกกิลด์</button>
       <button class="tab-btn" onclick="showTab('tab-cards','member')">🃏 การ์ด</button>
+      <button class="tab-btn" onclick="showTab('tab-comp','member')">🏁 แข่งขัน</button>
       <button class="tab-btn" onclick="showTab('tab-lb','member')">🏆 อันดับ</button>
     </div>
     <div id="tab-quests" class="tab-content active">
@@ -378,9 +409,15 @@
         <div id="member-quests"></div>
       </div>
     </div>
+    <div id="tab-teams" class="tab-content">
+      <div class="card">
+        <div class="card-title">👥 กลุ่มของคุณ</div>
+        <div id="member-teams"></div>
+      </div>
+    </div>
     <div id="tab-members" class="tab-content">
       <div class="card">
-        <div class="card-title">👥 สมาชิกในกิลด์</div>
+        <div class="card-title">⚔️ สมาชิกในกิลด์</div>
         <div id="member-members"></div>
       </div>
     </div>
@@ -388,6 +425,12 @@
       <div class="card">
         <div class="card-title">🃏 การ์ดของกิลด์ <span id="cards-leader-only" class="muted" style="font-size:.8rem;"></span></div>
         <div id="member-cards" class="grid-3"></div>
+      </div>
+    </div>
+    <div id="tab-comp" class="tab-content">
+      <div class="card">
+        <div class="card-title">🏁 การแข่งขัน</div>
+        <div id="member-competitions"></div>
       </div>
     </div>
     <div id="tab-lb" class="tab-content">
@@ -406,14 +449,29 @@
     </div>
     <div class="tab-bar">
       <button class="tab-btn active" onclick="showTab('a-tab-guilds','admin')">🏰 กิลด์ทั้งหมด</button>
+      <button class="tab-btn" onclick="showTab('a-tab-teams','admin')">👥 จัดการกลุ่ม</button>
       <button class="tab-btn" onclick="showTab('a-tab-quests','admin')">📜 จัดการเควส</button>
       <button class="tab-btn" onclick="showTab('a-tab-cards','admin')">🃏 จัดการการ์ด</button>
+      <button class="tab-btn" onclick="showTab('a-tab-comp','admin')">🏁 จัดการแข่งขัน</button>
       <button class="tab-btn" onclick="showTab('a-tab-log','admin')">📡 Console Log</button>
       <button class="tab-btn" onclick="showTab('a-tab-lb','admin')">🏆 อันดับ</button>
     </div>
     <!-- Admin: guilds -->
     <div id="a-tab-guilds" class="tab-content active">
       <div id="admin-guilds-list"></div>
+    </div>
+    <!-- Admin: teams -->
+    <div id="a-tab-teams" class="tab-content">
+      <div class="card">
+        <div class="card-title">👥 จัดการกลุ่มของกิลด์</div>
+        <div class="form-group">
+          <label>เลือกกิลด์</label>
+          <select id="admin-team-guild-sel" onchange="loadAdminTeamsForGuild()">
+            <option value="">-- เลือกกิลด์ --</option>
+          </select>
+        </div>
+        <div id="admin-teams-list"></div>
+      </div>
     </div>
     <!-- Admin: quests -->
     <div id="a-tab-quests" class="tab-content">
@@ -449,6 +507,21 @@
       <div class="card">
         <div class="card-title">🃏 การ์ดทั้งหมดในระบบ</div>
         <div id="admin-all-cards" class="grid-3"></div>
+      </div>
+    </div>
+    <!-- Admin: competitions -->
+    <div id="a-tab-comp" class="tab-content">
+      <div class="card">
+        <div class="card-title">➕ สร้างการแข่งขัน</div>
+        <div class="form-group">
+          <label>ชื่อการแข่งขัน</label>
+          <input id="comp-name" placeholder="ชื่อการแข่งขัน…" />
+        </div>
+        <button class="btn btn-gold btn-full" onclick="adminCreateCompetition()">🏁 สร้างการแข่งขัน</button>
+      </div>
+      <div class="card">
+        <div class="card-title">🏁 การแข่งขันทั้งหมด</div>
+        <div id="admin-comp-list"></div>
       </div>
     </div>
     <!-- Admin: log -->
@@ -495,6 +568,18 @@ const db = window.supabase.createClient(SUPA_URL, SUPA_KEY);
 const ADMIN_PASSWORD = 'camp2025';
 
 // ──────────────────────────────────────────────
+//  INITIAL CARD DATA (will be used for preset cards in system)
+// ──────────────────────────────────────────────
+const PRESET_CARDS = [
+  { icon: '⚔️', name: 'แรงปาฐาน', effect: '+30 point สำหรับกิลด์' },
+  { icon: '🛡️', name: 'โล่ป้องกัน', effect: 'ป้องกัน -20 point' },
+  { icon: '✨', name: 'เวทมนตร์ทำให้บวช', effect: 'คูณแต้ม x1.5' },
+  { icon: '💎', name: 'ทอพเพนเดิยม', effect: '+50 point' },
+  { icon: '🔥', name: 'ไฟประลัยพิษ', effect: '-15 point ให้อีกกิลด์' },
+  { icon: '🌙', name: 'พื้นพลังจันทร์', effect: 'คืนสมาชิก 1 เควส' },
+];
+
+// ──────────────────────────────────────────────
 //  STATE
 // ──────────────────────────────────────────────
 let state = {
@@ -537,11 +622,15 @@ function showTab(id, group) {
   event.currentTarget.classList.add('active');
   if (id === 'tab-cards') loadMemberCards();
   if (id === 'tab-members') loadMemberList();
+  if (id === 'tab-teams') loadMemberTeams();
+  if (id === 'tab-comp') loadMemberCompetitions();
   if (id === 'tab-quests') loadMemberQuests();
   if (id === 'tab-lb') loadLeaderboard('member-lb');
   if (id === 'a-tab-guilds') loadAdminGuilds();
+  if (id === 'a-tab-teams') loadAdminTeamsTab();
   if (id === 'a-tab-quests') loadAdminQuestTab();
   if (id === 'a-tab-cards') loadAdminCardsTab();
+  if (id === 'a-tab-comp') loadAdminCompTab();
   if (id === 'a-tab-log') loadAdminLog();
   if (id === 'a-tab-lb') loadLeaderboard('admin-lb');
 }
@@ -583,6 +672,7 @@ function checkAdminPw() {
   if (pw === ADMIN_PASSWORD) {
     state.role = 'admin';
     showScreen('screen-admin');
+    initSystemCards(); // Initialize cards if needed
     loadAdminGuilds();
     loadAdminQuestTab();
     loadAdminCardsTab();
@@ -717,6 +807,38 @@ async function loadMemberList() {
 }
 
 // ──────────────────────────────────────────────
+//  MEMBER: TEAMS
+// ──────────────────────────────────────────────
+async function loadMemberTeams() {
+  const wrap = document.getElementById('member-teams');
+  if (!wrap) return;
+  wrap.innerHTML = '<div class="muted">กำลังโหลด…</div>';
+  
+  const { data: teams } = await db.from('teams')
+    .select('*, team_members(*)')
+    .eq('guild_id', state.guildId);
+  
+  if (!teams || teams.length === 0) {
+    wrap.innerHTML = '<div class="empty">กิลด์ยังไม่มีกลุ่ม</div>';
+    return;
+  }
+  
+  wrap.innerHTML = teams.map(t => {
+    const members = t.team_members || [];
+    return `
+      <div class="team-item">
+        <div class="team-header">
+          👥 ${t.name} <span class="muted" style="font-size:.8rem;">(${members.length}/4)</span>
+        </div>
+        <div class="team-members-grid">
+          ${members.map(m => `<div class="team-member-badge">${m.member_name}</div>`).join('')}
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+// ──────────────────────────────────────────────
 //  MEMBER: CARDS
 // ──────────────────────────────────────────────
 async function loadMemberCards() {
@@ -749,6 +871,43 @@ async function loadMemberCards() {
         ${state.role === 'leader' && !used
           ? `<button class="btn btn-sm btn-accent btn-full" onclick="openUseCard(${item.id},'${c.name}','${c.effect||''}')">✨ ใช้การ์ด</button>`
           : ''}
+      </div>
+    `;
+  }).join('');
+}
+
+// ──────────────────────────────────────────────
+//  MEMBER: COMPETITIONS
+// ──────────────────────────────────────────────
+async function loadMemberCompetitions() {
+  const wrap = document.getElementById('member-competitions');
+  if (!wrap) return;
+  wrap.innerHTML = '<div class="muted">กำลังโหลด…</div>';
+  
+  const { data: comps } = await db.from('competitions')
+    .select('*, competition_participants(*)')
+    .order('created_at', { ascending: false });
+  
+  if (!comps || comps.length === 0) {
+    wrap.innerHTML = '<div class="empty">ยังไม่มีการแข่งขัน</div>';
+    return;
+  }
+  
+  wrap.innerHTML = comps.map(c => {
+    const participants = c.competition_participants || [];
+    const sorted = participants.sort((a, b) => b.score - a.score);
+    return `
+      <div class="competition-card">
+        <div class="comp-title">🏁 ${c.name}</div>
+        <div class="comp-guilds">
+          ${sorted.map((p, i) => `
+            <div class="comp-guild-row">
+              <span>${i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : i+1}. </span>
+              <span class="comp-guild-name">${p.guild_name}</span>
+              <span class="comp-guild-score">${p.score} pts</span>
+            </div>
+          `).join('')}
+        </div>
       </div>
     `;
   }).join('');
@@ -895,6 +1054,57 @@ async function deleteQuest(id) {
 }
 
 // ──────────────────────────────────────────────
+//  ADMIN: TEAMS
+// ──────────────────────────────────────────────
+async function loadAdminTeamsTab() {
+  const sel = document.getElementById('admin-team-guild-sel');
+  if (sel) {
+    const { data: guilds } = await db.from('guilds').select('id,name');
+    sel.innerHTML = '<option value="">-- เลือกกิลด์ --</option>' +
+      (guilds||[]).map(g => `<option value="${g.id}">${g.name}</option>`).join('');
+  }
+}
+
+async function loadAdminTeamsForGuild() {
+  const guildId = document.getElementById('admin-team-guild-sel').value;
+  const wrap = document.getElementById('admin-teams-list');
+  if (!wrap) return;
+  if (!guildId) { wrap.innerHTML = ''; return; }
+  wrap.innerHTML = '<div class="muted">กำลังโหลด…</div>';
+  
+  const { data: teams } = await db.from('teams')
+    .select('*, team_members(*)')
+    .eq('guild_id', parseInt(guildId));
+  
+  if (!teams || teams.length === 0) {
+    wrap.innerHTML = '<div class="empty">ยังไม่มีกลุ่ม</div>';
+    return;
+  }
+  
+  wrap.innerHTML = teams.map(t => {
+    const members = t.team_members || [];
+    return `
+      <div class="team-item">
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+          <div class="team-header">👥 ${t.name}</div>
+          <button class="btn btn-red btn-sm" onclick="deleteTeam(${t.id})">ลบ</button>
+        </div>
+        <div class="team-members-grid">
+          ${members.map(m => `<div class="team-member-badge">${m.member_name}</div>`).join('')}
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+async function deleteTeam(teamId) {
+  await db.from('teams').delete().eq('id', teamId);
+  const guildId = document.getElementById('admin-team-guild-sel').value;
+  if (guildId) loadAdminTeamsForGuild();
+  toast('ลบกลุ่มแล้ว', 'var(--muted)');
+}
+
+// ──────────────────────────────────────────────
 //  ADMIN: CARDS
 // ──────────────────────────────────────────────
 async function loadAdminCardsTab() {
@@ -931,6 +1141,87 @@ async function adminGiveCard() {
 }
 
 // ──────────────────────────────────────────────
+//  ADMIN: COMPETITIONS
+// ──────────────────────────────────────────────
+async function loadAdminCompTab() {
+  loadAdminCompList();
+}
+
+async function loadAdminCompList() {
+  const wrap = document.getElementById('admin-comp-list');
+  if (!wrap) return;
+  const { data: comps } = await db.from('competitions')
+    .select('*, competition_participants(*)')
+    .order('created_at', { ascending: false });
+  
+  if (!comps || comps.length === 0) {
+    wrap.innerHTML = '<div class="empty">ยังไม่มีการแข่งขัน</div>';
+    return;
+  }
+  
+  wrap.innerHTML = comps.map(c => {
+    const participants = c.competition_participants || [];
+    const sorted = participants.sort((a, b) => b.score - a.score);
+    return `
+      <div class="competition-card">
+        <div class="comp-title">🏁 ${c.name}</div>
+        <div class="comp-guilds">
+          ${sorted.map((p, i) => `
+            <div class="comp-guild-row">
+              <span>${i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : i+1}. </span>
+              <span class="comp-guild-name">${p.guild_name}</span>
+              <span class="comp-guild-score">${p.score} pts</span>
+              <button class="btn btn-green btn-sm" onclick="updateCompScore('${c.id}',${p.guild_id},${p.score},5)">+5</button>
+              <button class="btn btn-red btn-sm" onclick="updateCompScore('${c.id}',${p.guild_id},${p.score},-5)">-5</button>
+            </div>
+          `).join('')}
+        </div>
+        <button class="btn btn-red btn-sm mt-s" onclick="deleteCompetition('${c.id}')">ลบการแข่งขัน</button>
+      </div>
+    `;
+  }).join('');
+}
+
+async function adminCreateCompetition() {
+  const name = document.getElementById('comp-name').value.trim();
+  if (!name) return toast('กรุณาใส่ชื่อการแข่งขัน', 'var(--red)');
+  
+  const { data: comp } = await db.from('competitions').insert({ name }).select().single();
+  const { data: guilds } = await db.from('guilds').select('id,name');
+  
+  for (const g of (guilds || [])) {
+    await db.from('competition_participants').insert({ 
+      competition_id: comp.id, 
+      guild_id: g.id, 
+      guild_name: g.name, 
+      score: 0 
+    });
+  }
+  
+  await logActivity('Admin', `สร้างการแข่งขัน "${name}"`, null, 'create_competition');
+  toast('🏁 สร้างการแข่งขันแล้ว!');
+  document.getElementById('comp-name').value = '';
+  loadAdminCompList();
+}
+
+async function updateCompScore(compId, guildId, current, delta) {
+  const newScore = Math.max(0, current + delta);
+  await db.from('competition_participants')
+    .update({ score: newScore })
+    .eq('competition_id', compId)
+    .eq('guild_id', guildId);
+  await logActivity('Admin', `${delta > 0 ? '+' : ''}${delta} แต้มในการแข่งขัน`, guildId, 'update_comp_score');
+  loadAdminCompList();
+}
+
+async function deleteCompetition(compId) {
+  await db.from('competition_participants').delete().eq('competition_id', compId);
+  await db.from('competitions').delete().eq('id', compId);
+  toast('ลบการแข่งขันแล้ว', 'var(--muted)');
+  loadAdminCompList();
+}
+
+// ──────────────────────────────────────────────
 //  ADMIN: LOG
 // ──────────────────────────────────────────────
 async function loadAdminLog() {
@@ -952,6 +1243,19 @@ async function loadAdminLog() {
 // ──────────────────────────────────────────────
 //  LOG HELPER
 // ──────────────────────────────────────────────
+async function initSystemCards() {
+  const { data: existing } = await db.from('cards').select('id').limit(1);
+  if (existing && existing.length > 0) return; // Cards already exist
+  
+  for (const card of PRESET_CARDS) {
+    await db.from('cards').insert({
+      icon: card.icon,
+      name: card.name,
+      effect: card.effect
+    });
+  }
+}
+
 async function logActivity(actor, desc, guildId, type, extra) {
   await db.from('activity_log').insert({
     actor_name: actor,
