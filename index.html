@@ -622,24 +622,22 @@
     .guild-scroll-wrap {
       display: flex;
       flex-direction: column;
-      gap: 14px;
+      gap: 32px;
     }
 
     .guild-big-card {
-      background: #fff;
-      border: 1.5px solid var(--border);
-      border-radius: 18px;
-      padding: 20px 22px;
+      background: transparent;
+      border: none;
+      border-radius: 0;
+      padding: 0;
       cursor: pointer;
-      transition: all .22s;
-      box-shadow: 0 2px 10px rgba(0, 0, 0, .06);
+      transition: opacity .2s;
       position: relative;
     }
 
     .guild-big-card:hover {
-      border-color: var(--blue);
-      transform: translateY(-2px);
-      box-shadow: 0 6px 24px rgba(45, 125, 210, .13);
+      transform: none;
+      opacity: .85;
     }
 
     .guild-big-card.locked {
@@ -1118,18 +1116,7 @@
 
     /* Reference Style: Image or Icon as a header */
     .guild-big-visual {
-      width: 100%;
-      aspect-ratio: 16/9;
-      background: #eee;
-      border-radius: 20px;
-      margin-bottom: 12px;
-      overflow: hidden;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 3rem;
-      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
-      transition: box-shadow .25s;
+      display: none;
     }
 
     .guild-big-card:hover .guild-big-visual {
@@ -2205,28 +2192,6 @@
       window.scrollTo(0, 0);
     }
 
-    async function leaveGuild() {
-      if (!confirm('ต้องการออกจากกิลด์หรือไม่?')) return;
-      if (state.role === 'leader') {
-        return toast('หัวกิลด์ไม่สามารถออกจากกิลด์ได้ (ต้องลบกิลด์แทน)', 'var(--red)');
-      }
-      // Remove from teams
-      await db.from('team_members').delete().eq('member_name', state.name);
-      // Remove from guild
-      await db.from('members').delete().eq('id', state.memberId);
-      await logActivity(state.name, `ออกจากกิลด์ "${state.guildData?.name}"`, state.guildId, 'leave_guild');
-      state.guildId = null; state.guildData = null; state.role = null; state.memberId = null;
-      showScreen('screen-guild-select');
-      loadGuildList();
-      toast('ออกจากกิลด์แล้ว', 'var(--amber)');
-    }
-
-    function logout() {
-      state.name = ''; state.guildId = null; state.role = null; state.memberId = null;
-      showScreen('screen-login');
-      location.reload(); // Hard reset
-    }
-
     function enterAdminDashboard() {
       const userEl = document.getElementById('admin-nav-user');
       if (userEl) userEl.textContent = `${state.name} (Admin)`;
@@ -2375,30 +2340,43 @@
         const leader = members.find(m => m.role === 'leader');
         const memberChips = members.map(m =>
           `<div class="guild-member-chip ${m.role === 'leader' ? 'leader-chip' : ''}">
-        ${m.role === 'leader' ? '👑 ' : '👤 '}${m.name}
-      </div>`
+            ${m.role === 'leader' ? '👑 ' : '👤 '}${m.name}
+          </div>`
         ).join('');
         const guildTeams = (allTeams || []).filter(t => t.guild_id === g.id);
         const types = [...new Set(guildTeams.map(t => t.type).filter(Boolean))];
         const typeChips = types.map(tp => `<span class="badge badge-${typeClass(tp)}">${typeIcon(tp)} ${tp}</span>`).join('');
+
         return `
-      <div class="guild-big-card ${isLocked ? 'locked' : ''} ${isMine ? 'mine' : ''}" onclick="${isLocked ? `toast('ออกจากกิลด์ของคุณก่อน','var(--amber)')` : (`joinGuild(${g.id})`)}">
-        <div class="guild-big-visual" style="background:${isMine ? 'linear-gradient(135deg, #fff5f0, #ffede6)' : '#fff'};">
-          ${isMine ? '🏡' : '🏰'}
-        </div>
-        <div class="guild-big-card-header">
-          <div>
-            <div class="guild-big-name" style="text-shadow: var(--txt-shadow); font-size: 1.3rem;">${g.name}</div>
-            ${leader ? `<div class="guild-big-leader">👑 หัวหน้ากิลด์: ${leader.name}</div>` : '<div class="guild-big-leader" style="color:var(--red);">⚠️ ยังไม่มีหัวหน้า</div>'}
+          <div class="guild-big-card ${isLocked ? 'locked' : ''} ${isMine ? 'mine' : ''}"
+            onclick="${isLocked ? `toast('ออกจากกิลด์ของคุณก่อน','var(--amber)')` : `joinGuild(${g.id})`}">
+            
+            <div style="margin-bottom: 4px;">
+              <span style="
+                font-family:'Space Grotesk',sans-serif;
+                font-size: 2rem;
+                font-weight: 800;
+                color: #1a2c45;
+                text-shadow: 0 4px 16px rgba(0,0,0,0.12), 0 1px 0 rgba(255,255,255,0.8);
+                letter-spacing: -.01em;
+                line-height: 1.1;
+              ">${g.name}</span>
+              ${isMine ? `<span style="color:var(--blue);font-size:.78rem;font-weight:700;margin-left:10px;">● คุณอยู่ที่นี่</span>` : ''}
+            </div>
+
+            ${leader
+            ? `<div style="font-size:.85rem;font-weight:700;color:var(--gold);margin-bottom:8px;text-shadow:0 2px 8px rgba(230,168,23,.25);">👑 ${leader.name}</div>`
+            : `<div style="font-size:.82rem;color:var(--red);margin-bottom:8px;">⚠️ ยังไม่มีหัวกิลด์</div>`}
+
+            <div style="display:flex;align-items:center;gap:12px;margin-bottom:10px;">
+              <span class="level-badge lv-${lvInfo.current.lv}">${lvInfo.current.icon} Lv.${lvInfo.current.lv}</span>
+              ${typeChips}
+            </div>
+
+            <div class="news-members-preview">${memberChips || '<span class="muted" style="font-size:.8rem;">ยังไม่มีสมาชิก</span>'}</div>
+            <div style="margin-top:12px;height:1px;background:linear-gradient(90deg,rgba(0,0,0,0.06) 0%,transparent 100%);"></div>
           </div>
-          <div style="display:flex;flex-direction:column;align-items:flex-end;gap:5px;">
-            <div class="level-badge lv-${lvInfo.current.lv}">${lvInfo.current.icon} Lv.${lvInfo.current.lv}</div>
-          </div>
-        </div>
-        ${typeChips ? `<div class="flex-gap" style="margin:12px 0;">${typeChips}</div>` : ''}
-        <div class="news-members-preview" style="margin-top:10px;">${memberChips || '<span class="muted" style="font-size:.8rem;">ยังไม่มีสมาชิก</span>'}</div>
-      </div>
-    `;
+        `;
       }).join('');
     }
 
@@ -2410,7 +2388,6 @@
         const { data: me } = await db.from('members').select('guild_id').eq('name', state.name).maybeSingle();
         if (me) return toast('คุณอยู่ในกิลด์แล้ว ออกก่อนค่อยสร้างใหม่', 'var(--amber)');
       }
-      // Insert without type
       const { data: g, error } = await db.from('guilds').insert({ name, description: desc, xp: 0 }).select().single();
       if (error) return toast('เกิดข้อผิดพลาด: ' + error.message, 'var(--red)');
       const { data: m } = await db.from('members').insert({ name: state.name, guild_id: g.id, role: 'leader' }).select().single();
@@ -2458,6 +2435,7 @@
 
     let _newsGuildsCache = [];
     let _newsCompsCache = [];
+
     async function loadNewsGuilds() {
       const wrap = document.getElementById('news-guild-list'); if (!wrap) return;
       wrap.innerHTML = '<div class="muted" style="padding:20px;">กำลังโหลด…</div>';
@@ -2514,24 +2492,24 @@
           const lv = getLevelInfo(g.xp || 0);
           const chips = members.map(m =>
             `<div class="guild-member-chip ${m.role === 'leader' ? 'leader-chip' : ''}" style="font-size:.74rem;">
-          ${m.role === 'leader' ? '👑' : '👤'} ${m.name}
-        </div>`
+            ${m.role === 'leader' ? '👑' : '👤'} ${m.name}
+          </div>`
           ).join('');
           return `
-            <div class="news-card">
-              <div class="guild-big-visual" style="background:#fff; aspect-ratio: 16/10; font-size: 4rem;">🏰</div>
-              <div class="news-card-header" style="margin-top:12px; margin-bottom:8px;">
-                <div class="news-card-info">
-                  <div class="news-card-guild" style="text-shadow: 0 2px 4px rgba(0,0,0,0.15); font-size: 1.25rem;">${g.name}</div>
-                  <div class="news-card-meta">Lv.${lv.current.lv} · ${members.length} สมาชิก</div>
-                </div>
+          <div class="news-card">
+            <div class="guild-big-visual" style="background:#fff; aspect-ratio: 16/10; font-size: 4rem;">🏰</div>
+            <div class="news-card-header" style="margin-top:12px; margin-bottom:8px;">
+              <div class="news-card-info">
+                <div class="news-card-guild" style="text-shadow: 0 2px 4px rgba(0,0,0,0.15); font-size: 1.25rem;">${g.name}</div>
+                <div class="news-card-meta">Lv.${lv.current.lv} · ${members.length} สมาชิก</div>
               </div>
-              <div class="news-card-content" style="color:var(--muted); font-size:0.85rem; margin-bottom:12px; min-height: 40px;">
-                ${g.description || 'กิลด์นี้ยังไม่มีคำอธิบาย…'}
-              </div>
-              <div class="news-members-preview">${chips || '<span class="muted">ไม่มีสมาชิก</span>'}</div>
             </div>
-          `;
+            <div class="news-card-content" style="color:var(--muted); font-size:0.85rem; margin-bottom:12px; min-height: 40px;">
+              ${g.description || 'กิลด์นี้ยังไม่มีคำอธิบาย…'}
+            </div>
+            <div class="news-members-preview">${chips || '<span class="muted">ไม่มีสมาชิก</span>'}</div>
+          </div>
+        `;
         }).join('');
       }
 
