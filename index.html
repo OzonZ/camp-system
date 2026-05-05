@@ -641,15 +641,43 @@
         <button class="btn btn-purple btn-full" onclick="adminCreateCard()">✨ สร้างการ์ด</button>
       </div>
       <div class="card">
-        <div class="card-title">🎁 มอบการ์ดให้กิลด์</div>
-        <div class="grid-2">
-          <div class="form-group"><label>กิลด์</label><select id="c-guild"></select></div>
-          <div class="form-group"><label>การ์ด</label><select id="c-card"></select></div>
+        <div class="card-title">📦 สร้างสำเนาการ์ด (Card Copy)</div>
+        <div style="background:rgba(167,139,250,.1);border:1px solid rgba(167,139,250,.3);border-radius:8px;padding:12px;margin-bottom:12px;font-size:.85rem;color:var(--text);">
+          💡 สร้างสำเนาการ์ดแต่ละใบด้วยหมายเลข 3 หลัก สำเนาใหม่จะเข้าคลังสมบัติ (Void) โดยอัตโนมัติ
         </div>
-        <button class="btn btn-accent btn-full" onclick="adminGiveCard()">🎁 มอบการ์ด</button>
+        <div class="grid-2">
+          <div class="form-group"><label>เลือกการ์ด</label><select id="copy-card-template"></select></div>
+          <div class="form-group"><label>หมายเลข 3 หลัก (เช่น 001)</label><input id="copy-card-number" placeholder="001" maxlength="3" pattern="[0-9]{3}"/></div>
+        </div>
+        <button class="btn btn-purple btn-full" onclick="adminCreateCardCopy()">✨ สร้างสำเนาการ์ด</button>
       </div>
       <div class="card">
-        <div class="card-title">🃏 การ์ดในระบบ</div>
+        <div class="card-title">🌀 คลังสมบัติ (Void) - ว่าง</div>
+        <div style="background:rgba(56,189,248,.1);border:1px solid rgba(56,189,248,.3);border-radius:8px;padding:12px;margin-bottom:12px;font-size:.85rem;color:var(--text);">
+          📍 ที่เก็บการ์ดที่ยังไม่ได้มอบให้ใครหรือ การ์ดที่ถูกใช้แล้ว (จำนวน: <span id="void-count">0</span>)
+        </div>
+        <div id="admin-void-inventory" style="display:grid;gap:10px;"></div>
+      </div>
+      <div class="card">
+        <div class="card-title">🎁 มอบการ์ดให้กิลด์</div>
+        <div style="background:rgba(52,211,153,.1);border:1px solid rgba(52,211,153,.3);border-radius:8px;padding:12px;margin-bottom:12px;font-size:.85rem;color:var(--text);">
+          🔄 เลือกการ์ดจากคลังสมบัติ (Void) แล้วมอบให้กิลด์
+        </div>
+        <div class="grid-2">
+          <div class="form-group"><label>เลือกจากคลังสมบัติ</label><select id="void-card-copy"></select></div>
+          <div class="form-group"><label>เลือกกิลด์</label><select id="assign-guild"></select></div>
+        </div>
+        <button class="btn btn-green btn-full" onclick="adminAssignCardToGuild()">🎁 มอบการ์ด</button>
+      </div>
+      <div class="card">
+        <div class="card-title">📋 สถานะการ์ดทั้งหมด</div>
+        <div style="background:rgba(77,140,255,.1);border:1px solid rgba(77,140,255,.3);border-radius:8px;padding:12px;margin-bottom:12px;font-size:.85rem;color:var(--text);">
+          ✓ Void: ยังไม่ถูกใช้ | 🎯 Guild: มอบให้กิลด์แล้ว | ✔️ Used: ใช้แล้ว
+        </div>
+        <div id="admin-card-status-list"></div>
+      </div>
+      <div class="card">
+        <div class="card-title">🃏 การ์ดเทมเพลตในระบบ</div>
         <div id="admin-all-cards" class="grid-3"></div>
       </div>
     </div>
@@ -737,6 +765,32 @@
     <div class="row">
       <button class="btn btn-red w-full" onclick="confirmDeleteCard()">🗑️ ลบการ์ด</button>
       <button class="btn btn-ghost w-full" onclick="closeModal('modal-delete-card')">ยกเลิก</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: return card to void -->
+<div class="modal-overlay" id="modal-return-void">
+  <div class="modal-box">
+    <div class="modal-title">🔄 คืนการ์ดไปคลังสมบัติ</div>
+    <p id="modal-return-void-desc" style="margin-bottom:16px;color:var(--muted);font-size:.9rem;"></p>
+    <div style="background:rgba(251,191,36,.1);border:1px solid rgba(251,191,36,.3);border-radius:8px;padding:10px;margin-bottom:12px;font-size:.85rem;">
+      การ์ดนี้จะถูกคืนไปยังคลังสมบัติ (Void) และสามารถมอบให้กิลด์อื่นได้
+    </div>
+    <div class="row">
+      <button class="btn btn-amber w-full" onclick="confirmReturnCardToVoid()">🔄 คืนไปคลังสมบัติ</button>
+      <button class="btn btn-ghost w-full" onclick="closeModal('modal-return-void')">ยกเลิก</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: card copy details -->
+<div class="modal-overlay" id="modal-card-copy-details">
+  <div class="modal-box">
+    <div class="modal-title">🃏 รายละเอียดการ์ด</div>
+    <div id="modal-card-copy-content" style="max-height:60vh;overflow-y:auto;margin-bottom:16px;"></div>
+    <div class="row">
+      <button class="btn btn-ghost w-full" onclick="closeModal('modal-card-copy-details')">ปิด</button>
     </div>
   </div>
 </div>
@@ -1776,29 +1830,7 @@ async function adminCreateCard() {
   loadAdminCardsTab();
 }
 
-async function loadAdminCardsTab() {
-  initCardEmojiGrid();
-  const cGuild = document.getElementById('c-guild');
-  const cCard  = document.getElementById('c-card');
-  if (!cGuild || !cCard) return;
-  const { data: guilds } = await db.from('guilds').select('id,name');
-  cGuild.innerHTML = (guilds||[]).map(g => `<option value="${g.id}">${g.name}</option>`).join('');
-  const { data: cards } = await db.from('cards').select('*').order('created_at', { ascending: false });
-  cCard.innerHTML = (cards||[]).map(c => `<option value="${c.id}">${c.icon} ${c.name}</option>`).join('');
-  const wrap = document.getElementById('admin-all-cards');
-  if (wrap && cards) {
-    wrap.innerHTML = cards.map(c => `
-      <div class="card-item">
-        <div class="card-emoji">${c.icon||'🃏'}</div>
-        <div class="card-name">${c.name}</div>
-        <div class="card-effect">${c.effect||''}</div>
-        <button class="btn btn-red btn-sm btn-full" style="margin-top:8px;" onclick="askDeleteCard(${c.id},'${escStr(c.name)}')">🗑️ ลบ</button>
-      </div>
-    `).join('');
-  }
-}
-
-function askDeleteCard(cardId, cardName) {
+async function askDeleteCard(cardId, cardName) {
   state.pendingDeleteCardId = cardId;
   document.getElementById('modal-delete-card-desc').textContent = `ลบการ์ด "${cardName}" ออกจากระบบ? (guild_cards ทั้งหมดจะถูกลบด้วย)`;
   document.getElementById('modal-delete-card').classList.add('open');
@@ -1824,6 +1856,269 @@ async function adminGiveCard() {
   const { data: guild } = await db.from('guilds').select('name').eq('id', guildId).single();
   await logActivity('Admin', `มอบการ์ด "${card?.name}" ให้กิลด์ "${guild?.name}"`, parseInt(guildId), 'give_card');
   toast(`🎁 มอบการ์ด "${card?.name}" ให้ "${guild?.name}" แล้ว!`);
+}
+
+// ─── CARD INVENTORY: CARD COPIES ──────────
+async function adminCreateCardCopy() {
+  const cardId = parseInt(document.getElementById('copy-card-template').value);
+  const cardNumber = document.getElementById('copy-card-number').value.trim();
+  if (!cardId || !cardNumber) return toast('เลือกการ์ดและใส่หมายเลข 3 หลัก', 'var(--red)');
+  if (!/^\d{3}$/.test(cardNumber)) return toast('หมายเลขต้องเป็นตัวเลข 3 หลัก (เช่น 001)', 'var(--red)');
+  
+  const { data: card } = await db.from('cards').select('name,icon').eq('id', cardId).single();
+  if (!card) return toast('ไม่พบการ์ด', 'var(--red)');
+  
+  const { data: existing } = await db.from('card_copies').select('id').eq('card_number', cardNumber).single();
+  if (existing) return toast(`หมายเลข ${cardNumber} มีการใช้แล้ว`, 'var(--amber)');
+  
+  const { data: cardCopy, error: insertError } = await db.from('card_copies').insert({
+    card_id: cardId,
+    card_number: cardNumber,
+    status: 'void'
+  }).select().single();
+  
+  if (insertError) return toast('เกิดข้อผิดพลาด: ' + insertError.message, 'var(--red)');
+  
+  // Log in activity
+  await logActivity('Admin', `สร้างสำเนาการ์ด #${cardNumber} "${card.name}"`, null, 'create_card_copy');
+  
+  // Log in card inventory history
+  await db.from('card_inventory_history').insert({
+    card_copy_id: cardCopy.id,
+    action: 'create',
+    admin_name: 'Admin',
+    to_status: 'void',
+    notes: `สร้างสำเนาการ์ด "${card.name}"`
+  });
+  
+  toast(`✨ สร้างสำเนาการ์ด #${cardNumber} "${card.name}" เข้าคลังสมบัติแล้ว!`, 'var(--green)');
+  document.getElementById('copy-card-number').value = '';
+  loadAdminCardsTab();
+}
+
+async function adminAssignCardToGuild() {
+  const cardCopyId = parseInt(document.getElementById('void-card-copy').value);
+  const guildId = parseInt(document.getElementById('assign-guild').value);
+  if (!cardCopyId || !guildId) return toast('เลือกการ์ดจากคลังสมบัติและกิลด์', 'var(--red)');
+  
+  // Get card copy info
+  const { data: cardCopy } = await db.from('card_copies').select('*, cards(name,icon)').eq('id', cardCopyId).single();
+  if (!cardCopy || cardCopy.status !== 'void') return toast('การ์ดนี้ไม่อยู่ในคลังสมบัติ', 'var(--red)');
+  
+  // Get guild info
+  const { data: guild } = await db.from('guilds').select('name').eq('id', guildId).single();
+  if (!guild) return toast('ไม่พบกิลด์', 'var(--red)');
+  
+  // Update card copy
+  const { error: updateError } = await db.from('card_copies').update({
+    status: 'guild',
+    guild_id: guildId,
+    assigned_at: new Date().toISOString()
+  }).eq('id', cardCopyId);
+  
+  if (updateError) return toast('เกิดข้อผิดพลาด: ' + updateError.message, 'var(--red)');
+  
+  // Log in activity
+  await logActivity('Admin', `มอบการ์ด #${cardCopy.card_number} "${cardCopy.cards?.name}" ให้กิลด์ "${guild.name}"`, guildId, 'assign_card_to_guild');
+  
+  // Log in card inventory history
+  await db.from('card_inventory_history').insert({
+    card_copy_id: cardCopyId,
+    action: 'assign_to_guild',
+    admin_name: 'Admin',
+    from_status: 'void',
+    to_status: 'guild',
+    to_guild_id: guildId,
+    notes: `มอบให้กิลด์ "${guild.name}"`
+  });
+  
+  toast(`🎁 มอบการ์ด #${cardCopy.card_number} ให้ "${guild.name}" แล้ว!`, 'var(--green)');
+  document.getElementById('void-card-copy').value = '';
+  document.getElementById('assign-guild').value = '';
+  loadAdminCardsTab();
+}
+
+async function returnCardToVoid(cardCopyId, cardNumber) {
+  state.pendingReturnCardCopyId = cardCopyId;
+  document.getElementById('modal-return-void-desc').textContent = `คืนการ์ด #${cardNumber} ไปยังคลังสมบัติ (Void)?`;
+  document.getElementById('modal-return-void').classList.add('open');
+}
+
+async function confirmReturnCardToVoid() {
+  closeModal('modal-return-void');
+  const cardCopyId = state.pendingReturnCardCopyId;
+  
+  const { data: cardCopy } = await db.from('card_copies').select('*, cards(name)').eq('id', cardCopyId).single();
+  if (!cardCopy) return toast('ไม่พบการ์ด', 'var(--red)');
+  
+  const { error: updateError } = await db.from('card_copies').update({
+    status: 'void',
+    guild_id: null,
+    assigned_at: null
+  }).eq('id', cardCopyId);
+  
+  if (updateError) return toast('เกิดข้อผิดพลาด: ' + updateError.message, 'var(--red)');
+  
+  // Log in activity
+  await logActivity('Admin', `คืนการ์ด #${cardCopy.card_number} ไปคลังสมบัติ (Void)`, null, 'return_card_to_void');
+  
+  // Log in card inventory history
+  await db.from('card_inventory_history').insert({
+    card_copy_id: cardCopyId,
+    action: 'move_to_void',
+    admin_name: 'Admin',
+    from_status: 'guild',
+    to_status: 'void',
+    notes: `คืนการ์ด #${cardCopy.card_number} "${cardCopy.cards?.name}" ไปคลังสมบัติ`
+  });
+  
+  toast(`🔄 คืนการ์ด #${cardCopy.card_number} ไปคลังสมบัติแล้ว!`, 'var(--amber)');
+  loadAdminCardsTab();
+}
+
+async function loadAdminCardsTab() {
+  initCardEmojiGrid();
+  
+  // Load card copy template
+  const { data: cards } = await db.from('cards').select('id,icon,name').order('created_at', { ascending: false });
+  document.getElementById('copy-card-template').innerHTML = (cards||[]).map(c => `<option value="${c.id}">${c.icon} ${c.name}</option>`).join('');
+  document.getElementById('assign-guild').innerHTML = '<option value="">-- เลือกกิลด์ --</option>';
+  
+  // Load guilds for assignment
+  const { data: guilds } = await db.from('guilds').select('id,name');
+  const guildOptions = (guilds||[]).map(g => `<option value="${g.id}">${g.name}</option>`).join('');
+  document.getElementById('assign-guild').innerHTML += guildOptions;
+  
+  // Load void inventory
+  loadVoidInventory();
+  
+  // Load card status list
+  loadCardStatusList();
+  
+  // Load card templates
+  const cGuild = document.getElementById('c-guild');
+  const cCard  = document.getElementById('c-card');
+  if (cGuild && cCard) {
+    cGuild.innerHTML = (guilds||[]).map(g => `<option value="${g.id}">${g.name}</option>`).join('');
+    cCard.innerHTML = (cards||[]).map(c => `<option value="${c.id}">${c.icon} ${c.name}</option>`).join('');
+  }
+  
+  // Load card templates grid
+  const wrap = document.getElementById('admin-all-cards');
+  if (wrap) {
+    wrap.innerHTML = (cards||[]).map(c => `
+      <div class="card-item">
+        <div class="card-emoji">${c.icon}</div>
+        <div class="card-name">${c.name}</div>
+        <button class="btn btn-red btn-sm btn-full" style="margin-top:8px;" onclick="askDeleteCard(${c.id},'${escStr(c.name)}')">🗑️ ลบ</button>
+      </div>
+    `).join('');
+  }
+}
+
+async function loadVoidInventory() {
+  const wrap = document.getElementById('admin-void-inventory');
+  if (!wrap) return;
+  
+  const { data: voidCards } = await db.from('card_copies')
+    .select('*, cards(name,icon)')
+    .eq('status', 'void')
+    .order('card_number', { ascending: true });
+  
+  if (!voidCards || voidCards.length === 0) {
+    wrap.innerHTML = '<div class="muted" style="font-size:.85rem;padding:12px;text-align:center;">📭 ว่างเปล่า - ไม่มีการ์ดในคลังสมบัติ</div>';
+    document.getElementById('void-count').textContent = '0';
+    document.getElementById('void-card-copy').innerHTML = '<option value="">-- ไม่มีการ์ด --</option>';
+    return;
+  }
+  
+  document.getElementById('void-count').textContent = voidCards.length;
+  
+  wrap.innerHTML = voidCards.map(vc => `
+    <div class="card-item" style="cursor:pointer;transition:all .2s;" onclick="showCardCopyDetails(${vc.id})">
+      <div class="card-emoji">${vc.cards?.icon||'🃏'}</div>
+      <div style="font-size:.75rem;color:var(--muted);">#${vc.card_number}</div>
+      <div class="card-name">${vc.cards?.name||'?'}</div>
+    </div>
+  `).join('');
+  
+  document.getElementById('void-card-copy').innerHTML = '<option value="">-- เลือกการ์ด --</option>' +
+    voidCards.map(vc => `<option value="${vc.id}">📦 #${vc.card_number} - ${vc.cards?.name||'?'}</option>`).join('');
+}
+
+async function loadCardStatusList() {
+  const wrap = document.getElementById('admin-card-status-list');
+  if (!wrap) return;
+  
+  const { data: allCards } = await db.from('card_copies')
+    .select('*, cards(name,icon), guilds(name)')
+    .order('created_at', { ascending: false });
+  
+  if (!allCards || allCards.length === 0) {
+    wrap.innerHTML = '<div class="muted">ยังไม่มีการ์ด</div>';
+    return;
+  }
+  
+  wrap.innerHTML = allCards.map(cc => {
+    const statusIcon = cc.status === 'void' ? '✓' : cc.status === 'guild' ? '🎯' : '✔️';
+    const statusColor = cc.status === 'void' ? 'var(--cyan)' : cc.status === 'guild' ? 'var(--green)' : 'var(--muted)';
+    const guildInfo = cc.guilds ? ` · 🏰 ${cc.guilds.name}` : '';
+    
+    return `
+      <div class="card-item">
+        <div class="card-emoji">${cc.cards?.icon||'🃏'}</div>
+        <div style="font-size:.8rem;color:${statusColor};">${statusIcon} #${cc.card_number}</div>
+        <div class="card-name">${cc.cards?.name||'?'}</div>
+        <div class="muted" style="font-size:.75rem;margin-bottom:8px;">${cc.status}${guildInfo}</div>
+        ${cc.status === 'guild' ? `
+          <button class="btn btn-amber btn-sm btn-full" onclick="returnCardToVoid(${cc.id},'${cc.card_number}')">🔄 คืนไปVoid</button>
+        ` : ''}
+      </div>
+    `;
+  }).join('');
+}
+
+async function showCardCopyDetails(cardCopyId) {
+  const { data: cc } = await db.from('card_copies')
+    .select('*, cards(name,icon,effect), guilds(name), card_inventory_history(*)')
+    .eq('id', cardCopyId)
+    .single();
+  
+  if (!cc) return;
+  
+  const statusLabel = cc.status === 'void' ? '✓ อยู่ในคลังสมบัติ' : 
+                      cc.status === 'guild' ? `🎯 มอบให้ ${cc.guilds?.name}` : 
+                      '✔️ ใช้แล้ว';
+  
+  let content = `
+    <div style="margin-bottom:16px;">
+      <div style="font-size:2rem;text-align:center;margin-bottom:10px;">${cc.cards?.icon||'🃏'}</div>
+      <div style="font-weight:700;font-size:1rem;margin-bottom:4px;">${cc.cards?.name}</div>
+      <div style="font-size:.85rem;color:var(--muted);margin-bottom:8px;padding:8px;background:var(--surface);border-radius:6px;">
+        หมายเลข: <strong>#${cc.card_number}</strong>
+      </div>
+      <div style="font-size:.85rem;color:var(--gold);margin-bottom:8px;padding:8px;background:var(--surface);border-radius:6px;">
+        ${statusLabel}
+      </div>
+      <div style="font-size:.8rem;color:var(--muted);">ผล: ${cc.cards?.effect}</div>
+    </div>
+    <div style="background:var(--surface);border-radius:8px;padding:10px;margin-top:12px;">
+      <div style="font-size:.8rem;font-weight:700;color:var(--gold);margin-bottom:8px;">📋 ประวัติ</div>
+      ${(cc.card_inventory_history||[]).length === 0 ? 
+        '<div style="font-size:.75rem;color:var(--muted);">ไม่มีประวัติ</div>' :
+        (cc.card_inventory_history||[]).map(h => `
+          <div style="font-size:.75rem;color:var(--text);margin-bottom:4px;padding:6px;background:var(--card);border-radius:4px;">
+            <div style="color:var(--amber);">${new Date(h.created_at).toLocaleString('th-TH')}</div>
+            <div>${h.admin_name} - ${h.action}</div>
+            ${h.notes ? `<div style="color:var(--muted);">${h.notes}</div>` : ''}
+          </div>
+        `).join('')
+      }
+    </div>
+  `;
+  
+  document.getElementById('modal-card-copy-content').innerHTML = content;
+  document.getElementById('modal-card-copy-details').classList.add('open');
 }
 
 // ─── ADMIN: COMPETITIONS ─────────────────────────

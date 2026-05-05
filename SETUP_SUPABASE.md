@@ -95,7 +95,7 @@ CREATE TABLE cards (
 );
 ```
 
-### 8. Guild Cards Table
+### 8. Guild Cards Table (Legacy - for backwards compatibility)
 ```sql
 CREATE TABLE guild_cards (
   id BIGINT PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
@@ -107,6 +107,48 @@ CREATE TABLE guild_cards (
 );
 
 CREATE INDEX idx_guild_cards ON guild_cards(guild_id);
+```
+
+### 8B. Card Copies Table (NEW - Card Inventory System)
+This table tracks individual card copies with their 3-digit numbers and status.
+```sql
+CREATE TABLE card_copies (
+  id BIGINT PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
+  card_id BIGINT NOT NULL REFERENCES cards(id) ON DELETE CASCADE,
+  card_number TEXT NOT NULL, -- 3-digit number (e.g., "001", "042")
+  status TEXT DEFAULT 'void', -- 'void' (in Void storage), 'guild' (assigned to guild), 'used' (used by guild)
+  guild_id BIGINT REFERENCES guilds(id) ON DELETE SET NULL, -- NULL if in Void
+  used_by_member_name TEXT,
+  used_at TIMESTAMP,
+  assigned_at TIMESTAMP,
+  created_at TIMESTAMP DEFAULT NOW(),
+  UNIQUE(card_number) -- Ensure card numbers are unique
+);
+
+CREATE INDEX idx_card_copies_status ON card_copies(status);
+CREATE INDEX idx_card_copies_guild ON card_copies(guild_id);
+CREATE INDEX idx_card_copies_card ON card_copies(card_id);
+```
+
+### 8C. Card Inventory History Table
+Tracks all changes to card copies for audit purposes.
+```sql
+CREATE TABLE card_inventory_history (
+  id BIGINT PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
+  card_copy_id BIGINT NOT NULL REFERENCES card_copies(id) ON DELETE CASCADE,
+  action TEXT NOT NULL, -- 'create', 'move_to_void', 'assign_to_guild', 'use_card', 'return_to_void'
+  admin_name TEXT NOT NULL,
+  from_status TEXT,
+  to_status TEXT,
+  from_guild_id BIGINT,
+  to_guild_id BIGINT,
+  notes TEXT,
+  created_at TIMESTAMP DEFAULT NOW()
+);
+
+CREATE INDEX idx_card_inv_history_copy ON card_inventory_history(card_copy_id);
+CREATE INDEX idx_card_inv_history_action ON card_inventory_history(action);
+CREATE INDEX idx_card_inv_history_admin ON card_inventory_history(admin_name);
 ```
 
 ### 9. Competitions Table
@@ -145,6 +187,39 @@ CREATE TABLE activity_log (
 );
 
 CREATE INDEX idx_activity_log_created ON activity_log(created_at DESC);
+```
+
+## Card Inventory System (Void Storage)
+
+### Concept
+- **Void**: A central storage where all unclaimed cards and returned cards are kept
+- **Card Copies**: Each card has a physical copy with a unique 3-digit number
+- **Card Lifecycle**:
+  1. Admin creates a card copy (e.g., "001") → goes into Void
+  2. Admin assigns card copy to a guild
+  3. Guild leader uses the card (if applicable)
+  4. Card returns to Void (to be reused or archived)
+
+### Initial Card Copies Setup
+After creating card templates, add card copies to the Void:
+```sql
+-- First, get card IDs (adjust based on your actual card IDs)
+-- Example: Insert 5 copies of each card template (001-015)
+
+INSERT INTO card_copies (card_id, card_number, status, created_at) 
+VALUES 
+  (1, '001', 'void', NOW()),
+  (1, '002', 'void', NOW()),
+  (2, '003', 'void', NOW()),
+  (2, '004', 'void', NOW()),
+  (3, '005', 'void', NOW()),
+  (3, '006', 'void', NOW()),
+  (4, '007', 'void', NOW()),
+  (4, '008', 'void', NOW()),
+  (5, '009', 'void', NOW()),
+  (5, '010', 'void', NOW()),
+  (6, '011', 'void', NOW()),
+  (6, '012', 'void', NOW());
 ```
 
 ## Initial Card Setup
