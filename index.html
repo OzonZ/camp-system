@@ -189,16 +189,16 @@
       font-size: 2.8rem;
       font-weight: 800;
       letter-spacing: .02em;
-      color: #1a4a7a;
+      color: var(--text);
       text-shadow: 0 2px 12px rgba(45, 125, 210, .18);
     }
 
     .logo-title .accent {
-      color: #e6a817;
+      color: var(--gold);
     }
 
     .logo-sub {
-      color: #5a85aa;
+      color: var(--muted);
       font-size: .82rem;
       margin-top: 6px;
       letter-spacing: .18em;
@@ -400,21 +400,21 @@
     }
 
     .badge-unity {
-      background: rgba(23, 162, 184, .1);
-      color: #0c7d8e;
-      border: 1px solid rgba(23, 162, 184, .3);
+      background: rgba(8, 145, 178, .1);
+      color: var(--cyan);
+      border: 1px solid rgba(8, 145, 178, .3);
     }
 
     .badge-roblox {
-      background: rgba(220, 120, 40, .1);
-      color: #b85c00;
-      border: 1px solid rgba(220, 120, 40, .3);
+      background: rgba(217, 119, 6, .1);
+      color: var(--amber);
+      border: 1px solid rgba(217, 119, 6, .3);
     }
 
     .badge-webapp {
-      background: rgba(40, 167, 69, .1);
-      color: #1a6e2e;
-      border: 1px solid rgba(40, 167, 69, .3);
+      background: rgba(22, 163, 74, .1);
+      color: var(--green);
+      border: 1px solid rgba(22, 163, 74, .3);
     }
 
     .badge-leader {
@@ -431,19 +431,19 @@
 
     .badge-pending {
       background: rgba(230, 168, 23, .12);
-      color: #9a6f00;
+      color: var(--amber);
       border: 1px solid rgba(230, 168, 23, .35);
     }
 
     .badge-approved {
       background: rgba(40, 167, 69, .12);
-      color: #1a6e2e;
+      color: var(--green);
       border: 1px solid rgba(40, 167, 69, .35);
     }
 
     .badge-rejected {
       background: rgba(220, 53, 69, .12);
-      color: #9e1c28;
+      color: var(--red);
       border: 1px solid rgba(220, 53, 69, .35);
     }
 
@@ -666,7 +666,7 @@
       font-family: 'Space Grotesk', sans-serif;
       font-size: 1.15rem;
       font-weight: 800;
-      color: #1a2c45;
+      color: var(--text);
     }
 
     .guild-big-leader {
@@ -698,16 +698,16 @@
       padding: 4px 10px;
       font-size: .8rem;
       font-weight: 600;
-      color: #3a5a7a;
+      color: var(--text);
       display: flex;
       align-items: center;
       gap: 5px;
     }
 
     .guild-member-chip.leader-chip {
-      background: #fef9e7;
-      border-color: #e6c84a;
-      color: #7a5c00;
+      background: rgba(245, 158, 11, 0.1);
+      border-color: rgba(245, 158, 11, 0.3);
+      color: var(--gold);
     }
 
     /* ── TEAM BLOCKS (member dashboard) ── */
@@ -743,7 +743,7 @@
       font-family: 'Space Grotesk', sans-serif;
       font-weight: 700;
       font-size: 1.1rem;
-      color: #1a2c45;
+      color: var(--text);
       margin-bottom: 12px;
       padding-bottom: 8px;
       text-shadow: var(--txt-shadow);
@@ -1349,27 +1349,27 @@
     }
 
     .notice-info {
-      background: #e8f4fd;
-      border: 1px solid #bee5fb;
-      color: #0c6d97;
+      background: rgba(8, 145, 178, 0.1);
+      border: 1px solid rgba(8, 145, 178, 0.3);
+      color: var(--cyan);
     }
 
     .notice-warn {
-      background: #fff8e6;
-      border: 1px solid #ffe0a3;
-      color: #7a5500;
+      background: rgba(217, 119, 6, 0.1);
+      border: 1px solid rgba(217, 119, 6, 0.3);
+      color: var(--amber);
     }
 
     .notice-danger {
-      background: #fdecea;
-      border: 1px solid #f8c0c0;
-      color: #9e1c28;
+      background: rgba(220, 38, 38, 0.1);
+      border: 1px solid rgba(220, 38, 38, 0.3);
+      color: var(--red);
     }
 
     .notice-good {
-      background: #e8f8ee;
-      border: 1px solid #b8e6c8;
-      color: #1a6e2e;
+      background: rgba(22, 163, 74, 0.1);
+      border: 1px solid rgba(22, 163, 74, 0.3);
+      color: var(--green);
     }
 
     .row {
@@ -2361,7 +2361,7 @@
             onclick="${isLocked ? `toast('ออกจากกิลด์ของคุณก่อน','var(--amber)')` : (`joinGuild(${g.id})`)}">
             <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;">
               <div style="flex:1;min-width:0;">
-                <div style="font-family:'Space Grotesk',sans-serif;font-size:1.1rem;font-weight:800;color:#1a2c45;
+                <div style="font-family:'Space Grotesk',sans-serif;font-size:1.1rem;font-weight:800;color:var(--text);
                   text-shadow:0 2px 8px rgba(0,0,0,.08);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
                   ${g.name}${isMine ? ` <span style="color:var(--blue);font-size:.7rem;font-weight:700;">● คุณ</span>` : ''}
                 </div>
@@ -2377,7 +2377,7 @@
               </div>
             </div>
             ${typeChips ? `<div class="flex-gap" style="margin:6px 0 4px;">${typeChips}</div>` : ''}
-            <div style="height:1px;background:#f0f3f7;margin:8px 0;"></div>
+            <div style="height:1px;background:var(--border);margin:8px 0;"></div>
             <div class="news-members-preview" style="gap:4px;">
               ${memberChips || '<span class="muted" style="font-size:.76rem;">ยังไม่มีสมาชิก</span>'}
             </div>
