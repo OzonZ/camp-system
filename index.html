@@ -326,7 +326,6 @@
     .xp-label { font-family: 'Barlow Condensed', sans-serif; font-size: 1rem; font-weight: 600; color: var(--text); }
     .xp-info  { font-size: .8rem; color: var(--muted); }
 
-    /* ── ADMIN GUILD CARD ── */
     .admin-guild-item {
       background: var(--surface); border: 1px solid var(--border);
       border-radius: 14px; padding: 18px; margin-bottom: 12px;
@@ -341,7 +340,6 @@
       display: flex; gap: 6px; align-items: center; flex-wrap: wrap; justify-content: flex-end;
     }
 
-    /* ── ACTION GROUP ── */
     .action-group {
       background: var(--card); border: 1px solid var(--border);
       border-radius: 10px; padding: 10px 12px; margin-top: 10px;
@@ -351,7 +349,6 @@
       text-transform: uppercase; letter-spacing: .08em; margin-bottom: 8px;
     }
 
-    /* ── DANGER ZONE ── */
     .danger-zone {
       background: rgba(248,113,113,.04); border: 1px solid rgba(248,113,113,.2);
       border-radius: 10px; padding: 12px; margin-top: 10px;
@@ -362,7 +359,6 @@
       display: flex; align-items: center; gap: 6px;
     }
 
-    /* ── MANAGE MEMBERS MODAL ── */
     .manage-member-row {
       display: flex; align-items: center; gap: 8px;
       padding: 9px 12px; background: var(--surface); border-radius: 8px; margin-bottom: 6px;
@@ -406,7 +402,6 @@
     .danger { color: var(--red); }
     .success { color: var(--green); }
 
-    /* Confirm input highlight */
     #delete-guild-confirm-input:focus { border-color: var(--red); box-shadow: 0 0 0 3px rgba(248,113,113,.12); }
   </style>
 </head>
@@ -722,7 +717,6 @@
 
 <!-- ══════════════ MODALS ══════════════ -->
 
-<!-- MODAL: use card -->
 <div class="modal-overlay" id="modal-use-card">
   <div class="modal-box">
     <div class="modal-title">🃏 ยืนยันการใช้การ์ด</div>
@@ -734,7 +728,6 @@
   </div>
 </div>
 
-<!-- MODAL: submit quest -->
 <div class="modal-overlay" id="modal-submit-quest">
   <div class="modal-box">
     <div class="modal-title">📤 ส่งงานเควส</div>
@@ -761,14 +754,12 @@
   </div>
 </div>
 
-<!-- MODAL: view submission image -->
 <div class="modal-overlay" id="modal-view-img" onclick="closeModal('modal-view-img')">
   <div style="max-width:90vw;max-height:90vh;">
     <img id="modal-big-img" style="max-width:100%;max-height:85vh;border-radius:12px;display:block;" alt=""/>
   </div>
 </div>
 
-<!-- MODAL: delete card confirm -->
 <div class="modal-overlay" id="modal-delete-card">
   <div class="modal-box">
     <div class="modal-title">🗑️ ลบการ์ด</div>
@@ -780,7 +771,6 @@
   </div>
 </div>
 
-<!-- MODAL: return card to void -->
 <div class="modal-overlay" id="modal-return-void">
   <div class="modal-box">
     <div class="modal-title">🔄 คืนการ์ดไปคลังสมบัติ</div>
@@ -795,7 +785,6 @@
   </div>
 </div>
 
-<!-- MODAL: card copy details -->
 <div class="modal-overlay" id="modal-card-copy-details">
   <div class="modal-box">
     <div class="modal-title">🃏 รายละเอียดการ์ด</div>
@@ -806,7 +795,6 @@
   </div>
 </div>
 
-<!-- MODAL: edit guild -->
 <div class="modal-overlay" id="modal-edit-guild">
   <div class="modal-box">
     <div class="modal-title">✏️ แก้ไขกิลด์</div>
@@ -838,7 +826,6 @@
   </div>
 </div>
 
-<!-- MODAL: delete guild confirm -->
 <div class="modal-overlay" id="modal-delete-guild">
   <div class="modal-box">
     <div class="modal-title">⚠️ ลบกิลด์</div>
@@ -855,12 +842,9 @@
   </div>
 </div>
 
-<!-- MODAL: manage guild members -->
 <div class="modal-overlay" id="modal-manage-members">
   <div class="modal-box" style="max-width:540px;">
     <div class="modal-title">👥 จัดการสมาชิก — <span id="modal-members-guild-name"></span></div>
-
-    <!-- Add member -->
     <div style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:14px;">
       <div style="font-size:.78rem;color:var(--muted);font-weight:700;letter-spacing:.06em;text-transform:uppercase;margin-bottom:10px;">➕ เพิ่มสมาชิกใหม่</div>
       <div class="grid-2" style="margin-bottom:8px;">
@@ -872,18 +856,14 @@
       </div>
       <button class="btn btn-green btn-sm w-full" onclick="adminAddMember()">+ เพิ่มสมาชิก</button>
     </div>
-
-    <!-- Member list -->
     <div style="font-size:.78rem;color:var(--muted);font-weight:700;letter-spacing:.06em;text-transform:uppercase;margin-bottom:8px;">
       สมาชิกปัจจุบัน <span id="modal-member-count" class="badge badge-member" style="font-size:.7rem;"></span>
     </div>
     <div id="modal-members-list"></div>
-
     <button class="btn btn-ghost btn-full btn-sm mt-s" onclick="closeModal('modal-manage-members')">ปิด</button>
   </div>
 </div>
 
-<!-- MODAL: edit member role -->
 <div class="modal-overlay" id="modal-edit-member">
   <div class="modal-box" style="max-width:360px;">
     <div class="modal-title">✏️ แก้ไขสมาชิก</div>
@@ -909,16 +889,12 @@
 <div id="toast"></div>
 
 <script>
-// ═══════════════════════════════════════════════
-//  SUPABASE
-// ═══════════════════════════════════════════════
 const SUPA_URL = 'https://wguugymlanmshiulphft.supabase.co';
 const SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndndXVneW1sYW5tc2hpdWxwaGZ0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc4MjMzMjEsImV4cCI6MjA5MzM5OTMyMX0.YTRezbxABMpiWIOmW9HOkGsT_O-nZgzpICZsPjo4r7Q';
 const db = window.supabase.createClient(SUPA_URL, SUPA_KEY);
 
 const ADMIN_PASSWORD = '14124';
 
-// ─── LEVEL SYSTEM ───────────────────────────────
 const LEVELS = [
   { lv:1, name:'Novice',    xpNeeded:0,    icon:'🪨' },
   { lv:2, name:'Apprentice',xpNeeded:100,  icon:'⚗️' },
@@ -941,20 +917,20 @@ function getLevelInfo(xp) {
 
 const CARD_EMOJIS = ['⚔️','🛡️','✨','💎','🔥','🌙','🌊','⚡','🏹','🗡️','🔮','💫','🌟','🎯','🐉','🦅','🦁','🌈','💥','🎪','🧲','🪄','🍀','🔑','🎭','🏆','🎲','🌺','🦊','🦋'];
 
-// ─── STATE ───────────────────────────────────────
 let state = {
   name: '', role: '',
   guildId: null, guildData: null,
   memberId: null,
   pendingGuildCardId: null,
+  pendingCardType: null,
   pendingQuestId: null, pendingQuestTitle: '',
   pendingDeleteCardId: null,
   pendingDeleteGuildId: null, pendingDeleteGuildName: null,
+  pendingReturnCardCopyId: null,
   managingGuildId: null,
   teamMembersList: [],
 };
 
-// ─── PARTICLES ──────────────────────────────────
 (function(){
   const c = document.getElementById('particles');
   for (let i = 0; i < 60; i++) {
@@ -968,7 +944,6 @@ let state = {
   }
 })();
 
-// ─── SCREENS & TABS ──────────────────────────────
 function showScreen(id) {
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
   document.getElementById(id).classList.add('active');
@@ -1000,7 +975,6 @@ function showTab(id, group) {
   if (loaders[id]) loaders[id]();
 }
 
-// ─── TOAST ───────────────────────────────────────
 function toast(msg, color = 'var(--green)') {
   const t = document.getElementById('toast');
   t.textContent = msg; t.style.color = color;
@@ -1012,7 +986,6 @@ function closeModal(id) {
   document.getElementById(id).classList.remove('open');
 }
 
-// ─── LOGIN ───────────────────────────────────────
 async function loginUser() {
   const name = document.getElementById('login-name').value.trim();
   if (!name) return toast('กรุณาใส่ชื่อก่อน', 'var(--red)');
@@ -1035,15 +1008,14 @@ function checkAdminPw() {
 
 function logout() {
   state = { name:'', role:'', guildId:null, guildData:null, memberId:null,
-    pendingGuildCardId:null, pendingQuestId:null, pendingQuestTitle:'',
+    pendingGuildCardId:null, pendingCardType:null, pendingQuestId:null, pendingQuestTitle:'',
     pendingDeleteCardId:null, pendingDeleteGuildId:null, pendingDeleteGuildName:null,
-    managingGuildId:null, teamMembersList:[] };
+    pendingReturnCardCopyId:null, managingGuildId:null, teamMembersList:[] };
   showScreen('screen-login');
   document.getElementById('login-name').value = '';
   document.getElementById('admin-pw-input').value = '';
 }
 
-// ─── LEAVE GUILD ─────────────────────────────────
 async function leaveGuild() {
   if (!confirm(`ออกจากกิลด์ "${state.guildData?.name}" ?`)) return;
   if (state.memberId) {
@@ -1056,7 +1028,6 @@ async function leaveGuild() {
   toast('ออกจากกิลด์แล้ว', 'var(--amber)');
 }
 
-// ─── GUILD SELECT ────────────────────────────────
 async function loadGuildList() {
   const wrap = document.getElementById('guild-list-select');
   wrap.innerHTML = '<div class="muted" style="padding:20px">กำลังโหลด…</div>';
@@ -1134,14 +1105,12 @@ async function joinGuild(guildId) {
 }
 
 function enterMemberDashboard(g) {
-  const lvInfo = getLevelInfo(g.xp || 0);
   document.getElementById('member-guild-name-nav').textContent = `${typeIcon(g.type)} ${g.name}`;
   document.getElementById('member-nav-user').textContent = `${state.name} · ${state.role === 'leader' ? '👑 หัวกิลด์' : '⚔️'}`;
   showScreen('screen-member');
   loadMemberQuests();
 }
 
-// ─── MEMBER: QUESTS ──────────────────────────────
 async function loadMemberQuests() {
   const wrap = document.getElementById('member-quests');
   if (!wrap) return;
@@ -1220,7 +1189,6 @@ async function confirmSubmitQuest() {
   loadMemberQuests();
 }
 
-// ─── MEMBER: TEAMS ───────────────────────────────
 async function loadMemberTeams() {
   const wrap = document.getElementById('member-teams');
   if (!wrap) return;
@@ -1239,7 +1207,6 @@ async function loadMemberTeams() {
   `).join('');
 }
 
-// ─── MEMBER: LIST ────────────────────────────────
 async function loadMemberList() {
   const wrap = document.getElementById('member-members');
   if (!wrap) return;
@@ -1254,7 +1221,6 @@ async function loadMemberList() {
   `).join('');
 }
 
-// ─── MEMBER: CARDS ───────────────────────────────
 async function loadMemberCards() {
   const wrap = document.getElementById('member-cards');
   const note = document.getElementById('cards-leader-only');
@@ -1262,50 +1228,27 @@ async function loadMemberCards() {
   if (state.role !== 'leader') note.textContent = '(เฉพาะหัวกิลด์ใช้ได้)';
   else note.textContent = '';
   wrap.innerHTML = '<div class="muted">กำลังโหลด…</div>';
-  
-  // Fetch both legacy guild_cards and new card_copies
   const { data: gc } = await db.from('guild_cards').select('*, cards(*)').eq('guild_id', state.guildId);
   const { data: cc } = await db.from('card_copies')
     .select('*, cards(*)')
     .eq('status', 'guild')
     .eq('guild_id', state.guildId);
-  
   const allCards = [];
-  
-  // Add legacy cards
   if (gc && gc.length > 0) {
-    allCards.push(...gc.map(item => ({
-      type: 'legacy',
-      id: item.id,
-      used: item.used,
-      card: item.cards,
-      cardNumber: null
-    })));
+    allCards.push(...gc.map(item => ({ type: 'legacy', id: item.id, used: item.used, card: item.cards, cardNumber: null })));
   }
-  
-  // Add new card copies
   if (cc && cc.length > 0) {
-    allCards.push(...cc.map(item => ({
-      type: 'copy',
-      id: item.id,
-      used: false,
-      card: item.cards,
-      cardNumber: item.card_number
-    })));
+    allCards.push(...cc.map(item => ({ type: 'copy', id: item.id, used: false, card: item.cards, cardNumber: item.card_number })));
   }
-  
-  if (allCards.length === 0) { 
-    wrap.innerHTML = '<div class="empty" style="grid-column:1/-1">ยังไม่มีการ์ด</div>'; 
-    return; 
+  if (allCards.length === 0) {
+    wrap.innerHTML = '<div class="empty" style="grid-column:1/-1">ยังไม่มีการ์ด</div>';
+    return;
   }
-  
   wrap.innerHTML = allCards.map(item => {
     const c = item.card;
     const hasImage = c?.image_data;
     const cardNumberBadge = item.cardNumber ? `<div style="position:absolute;top:8px;right:8px;background:var(--purple);color:white;padding:4px 8px;border-radius:6px;font-size:.7rem;font-weight:700;">#${item.cardNumber}</div>` : '';
-    
     if (hasImage) {
-      // Display with card image
       return `
         <div class="card-item ${item.used ? 'card-used' : ''}" style="position:relative;padding:12px;">
           ${cardNumberBadge}
@@ -1320,7 +1263,6 @@ async function loadMemberCards() {
         </div>
       `;
     } else {
-      // Display without image (legacy or no image)
       return `
         <div class="card-item ${item.used ? 'card-used' : ''}" style="position:relative;">
           ${cardNumberBadge}
@@ -1347,23 +1289,16 @@ async function confirmUseCard() {
   closeModal('modal-use-card');
   const cardType = state.pendingCardType || 'legacy';
   const cardId = state.pendingGuildCardId;
-  
   if (cardType === 'copy') {
-    // Handle new card_copies type
     const { data: cc } = await db.from('card_copies').select('*, cards(name)').eq('id', cardId).single();
     if (cc) {
       const cardName = cc.cards?.name || 'การ์ด';
-      // Update status to 'used'
-      await db.from('card_copies').update({ 
+      await db.from('card_copies').update({
         status: 'used',
         used_by_member_name: state.name,
         used_at: new Date().toISOString()
       }).eq('id', cardId);
-      
-      // Log in activity
       await logActivity(state.name, `ใช้การ์ด #${cc.card_number} "${cardName}"`, state.guildId, 'use_card');
-      
-      // Log in card inventory history
       await db.from('card_inventory_history').insert({
         card_copy_id: cardId,
         action: 'use_card',
@@ -1372,22 +1307,18 @@ async function confirmUseCard() {
         to_status: 'used',
         notes: `ใช้โดย ${state.name}`
       });
-      
       toast(`✨ ใช้การ์ด #${cc.card_number} "${cardName}" แล้ว!`, 'var(--purple)');
     }
   } else {
-    // Handle legacy guild_cards type
     await db.from('guild_cards').update({ used: true }).eq('id', cardId);
     const { data: gc } = await db.from('guild_cards').select('cards(name)').eq('id', cardId).single();
     const cardName = gc?.cards?.name || 'การ์ด';
     await logActivity(state.name, `ใช้การ์ด "${cardName}"`, state.guildId, 'use_card');
     toast(`✨ ใช้การ์ด "${cardName}" แล้ว!`, 'var(--purple)');
   }
-  
   loadMemberCards();
 }
 
-// ─── MEMBER: COMPETITIONS ─────────────────────────
 async function loadMemberCompetitions() {
   const wrap = document.getElementById('member-competitions');
   if (!wrap) return;
@@ -1414,7 +1345,6 @@ async function loadMemberCompetitions() {
   }).join('');
 }
 
-// ─── LEADERBOARD ─────────────────────────────────
 async function loadLeaderboard(targetId) {
   const wrap = document.getElementById(targetId);
   if (!wrap) return;
@@ -1445,18 +1375,12 @@ async function loadLeaderboard(targetId) {
   }).join('');
 }
 
-// ═══════════════════════════════════════════════
-//  ADMIN: GUILDS  (with full management)
-// ═══════════════════════════════════════════════
 async function loadAdminGuilds() {
   const wrap = document.getElementById('admin-guilds-list');
   if (!wrap) return;
   wrap.innerHTML = '<div class="muted" style="padding:20px">กำลังโหลด…</div>';
   const { data: guilds } = await db.from('guilds').select('*, members(*)');
-  if (!guilds || guilds.length === 0) {
-    wrap.innerHTML = '<div class="empty">ยังไม่มีกิลด์</div>';
-    return;
-  }
+  if (!guilds || guilds.length === 0) { wrap.innerHTML = '<div class="empty">ยังไม่มีกิลด์</div>'; return; }
   wrap.innerHTML = guilds.map(g => {
     const members = g.members || [];
     const leader = members.find(m => m.role === 'leader');
@@ -1472,7 +1396,6 @@ async function loadAdminGuilds() {
             </div>
             ${leader ? `<div class="muted mt-s" style="font-size:.8rem;">👑 หัวกิลด์: <strong style="color:var(--text)">${leader.name}</strong></div>` : ''}
           </div>
-          <!-- XP Controls -->
           <div class="admin-guild-actions">
             <button class="btn btn-green btn-sm" onclick="addXP(${g.id},${g.xp||0},50)">+50 XP</button>
             <button class="btn btn-accent btn-sm" onclick="addXP(${g.id},${g.xp||0},100)">+100 XP</button>
@@ -1480,21 +1403,15 @@ async function loadAdminGuilds() {
             <button class="btn btn-ghost btn-sm" onclick="adminSetXP(${g.id})">✏️ XP</button>
           </div>
         </div>
-
-        <!-- XP Bar -->
         <div class="prog-wrap"><div class="prog-fill prog-lv" style="width:${lvInfo.pct}%"></div></div>
         <div class="muted" style="font-size:.78rem;margin-top:2px;">
           ${lvInfo.next ? `${lvInfo.xpInLevel}/${lvInfo.xpToNext} XP ถึง ${lvInfo.next.icon} Lv.${lvInfo.next.lv}` : '🌟 MAX LEVEL'}
         </div>
-
-        <!-- Member preview -->
         <div class="mt-s" style="display:flex;flex-wrap:wrap;gap:4px;align-items:center;">
           <span class="muted" style="font-size:.78rem;">👥 ${members.length} คน:</span>
           ${members.map(m => `<span class="badge ${m.role==='leader'?'badge-leader':'badge-member'}">${m.name}</span>`).join('')}
           ${members.length === 0 ? '<span class="muted" style="font-size:.78rem;">ไม่มีสมาชิก</span>' : ''}
         </div>
-
-        <!-- Management Actions -->
         <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap;">
           <button class="btn btn-accent btn-sm" onclick="openManageMembers(${g.id},'${escStr(g.name)}')">
             👥 จัดการสมาชิก (${members.length})
@@ -1530,7 +1447,6 @@ function adminSetXP(guildId) {
   });
 }
 
-// ─── EDIT GUILD ──────────────────────────────────
 function openEditGuild(id, name, type, desc, xp) {
   document.getElementById('edit-guild-id').value = id;
   document.getElementById('edit-guild-name').value = name;
@@ -1555,7 +1471,6 @@ async function confirmEditGuild() {
   loadAdminGuilds();
 }
 
-// ─── DELETE GUILD ────────────────────────────────
 function openDeleteGuild(id, name) {
   state.pendingDeleteGuildId = id;
   state.pendingDeleteGuildName = name;
@@ -1572,12 +1487,9 @@ async function confirmDeleteGuild() {
   }
   const id = state.pendingDeleteGuildId;
   const name = state.pendingDeleteGuildName;
-
-  // Delete all related data
   await db.from('quest_submissions').delete().eq('guild_id', id);
   await db.from('guild_cards').delete().eq('guild_id', id);
   await db.from('competition_participants').delete().eq('guild_id', id);
-  // Delete team members via teams
   const { data: teams } = await db.from('teams').select('id').eq('guild_id', id);
   for (const t of (teams || [])) {
     await db.from('team_members').delete().eq('team_id', t.id);
@@ -1585,16 +1497,12 @@ async function confirmDeleteGuild() {
   await db.from('teams').delete().eq('guild_id', id);
   await db.from('members').delete().eq('guild_id', id);
   await db.from('guilds').delete().eq('id', id);
-
   await logActivity('Admin', `ลบกิลด์ "${name}" ออกจากระบบ`, null, 'delete_guild');
   closeModal('modal-delete-guild');
   toast(`🗑️ ลบกิลด์ "${name}" แล้ว`, 'var(--red)');
   loadAdminGuilds();
 }
 
-// ═══════════════════════════════════════════════
-//  ADMIN: MANAGE MEMBERS (in guild)
-// ═══════════════════════════════════════════════
 async function openManageMembers(guildId, guildName) {
   state.managingGuildId = guildId;
   document.getElementById('modal-members-guild-name').textContent = guildName;
@@ -1637,11 +1545,8 @@ async function adminAddMember() {
   const role = document.getElementById('add-member-role').value;
   if (!name) return toast('กรุณาใส่ชื่อสมาชิก', 'var(--red)');
   if (!state.managingGuildId) return;
-
-  // Check duplicate in this guild
   const { data: existing } = await db.from('members').select('id').eq('guild_id', state.managingGuildId).eq('name', name).maybeSingle();
   if (existing) return toast('มีสมาชิกชื่อนี้ในกิลด์แล้ว', 'var(--amber)');
-
   const { error } = await db.from('members').insert({ name, guild_id: state.managingGuildId, role });
   if (error) return toast('เกิดข้อผิดพลาด: ' + error.message, 'var(--red)');
   await logActivity('Admin', `เพิ่มสมาชิก "${name}" (${role}) ในกิลด์ id=${state.managingGuildId}`, state.managingGuildId, 'add_member');
@@ -1681,7 +1586,6 @@ async function confirmEditMember() {
   loadAdminGuilds();
 }
 
-// ─── ADMIN: QUEST TAB ────────────────────────────
 async function loadAdminQuestTab() {
   const sel = document.getElementById('q-guild');
   if (sel) {
@@ -1733,7 +1637,6 @@ async function deleteQuest(id) {
   loadAdminQuestList();
 }
 
-// ─── ADMIN: SUBMISSIONS ──────────────────────────
 async function loadAdminSubmissions() {
   const wrap = document.getElementById('admin-submissions');
   const countEl = document.getElementById('pending-count');
@@ -1805,7 +1708,6 @@ async function rejectSubmission(subId, memberName) {
   loadAdminSubmissions();
 }
 
-// ─── ADMIN: TEAMS ────────────────────────────────
 let teamMembersBuilder = [];
 
 function addTeamMemberInput() {
@@ -1895,7 +1797,6 @@ async function deleteTeam(teamId) {
   loadAdminAllTeams();
 }
 
-// ─── ADMIN: CARDS ────────────────────────────────
 function initCardEmojiGrid() {
   const grid = document.getElementById('card-emoji-grid');
   if (!grid || grid.children.length > 0) return;
@@ -1921,27 +1822,13 @@ async function adminCreateCard() {
   const name = document.getElementById('card-name-input').value.trim();
   const effect = document.getElementById('card-effect-input').value.trim();
   const imageInput = document.getElementById('card-image-input');
-  
   if (!name) return toast('กรุณาใส่ชื่อการ์ด', 'var(--red)');
-  
   let imageData = null;
   let imageMimeType = null;
-  
-  // Handle image upload if provided
   if (imageInput.files && imageInput.files[0]) {
     const file = imageInput.files[0];
-    
-    // Validate file size (max 3 MB)
-    if (file.size > 3 * 1024 * 1024) {
-      return toast('รูปภาพต้องไม่เกิน 3 MB', 'var(--red)');
-    }
-    
-    // Validate file type
-    if (!['image/png', 'image/jpeg'].includes(file.type)) {
-      return toast('รองรับเฉพาะ PNG หรือ JPEG เท่านั้น', 'var(--red)');
-    }
-    
-    // Convert to base64
+    if (file.size > 3 * 1024 * 1024) return toast('รูปภาพต้องไม่เกิน 3 MB', 'var(--red)');
+    if (!['image/png', 'image/jpeg'].includes(file.type)) return toast('รองรับเฉพาะ PNG หรือ JPEG เท่านั้น', 'var(--red)');
     try {
       imageData = await new Promise((resolve, reject) => {
         const reader = new FileReader();
@@ -1954,21 +1841,10 @@ async function adminCreateCard() {
       return toast('เกิดข้อผิดพลาดในการอ่านรูปภาพ: ' + err.message, 'var(--red)');
     }
   }
-  
-  const { error } = await db.from('cards').insert({ 
-    icon, 
-    name, 
-    effect,
-    image_data: imageData,
-    image_mime_type: imageMimeType
-  });
-  
+  const { error } = await db.from('cards').insert({ icon, name, effect, image_data: imageData, image_mime_type: imageMimeType });
   if (error) return toast('เกิดข้อผิดพลาด: ' + error.message, 'var(--red)');
-  
   await logActivity('Admin', `สร้างการ์ดใหม่ "${name}"${imageData ? ' (มีรูป)' : ''}`, null, 'create_card');
   toast('✨ สร้างการ์ดแล้ว!');
-  
-  // Clear form
   document.getElementById('card-icon-input').value = '';
   document.getElementById('card-name-input').value = '';
   document.getElementById('card-effect-input').value = '';
@@ -1977,7 +1853,6 @@ async function adminCreateCard() {
   document.getElementById('card-image-preview-wrap').style.display = 'none';
   document.getElementById('card-image-size-info').textContent = '';
   document.querySelectorAll('.emoji-opt').forEach(el => el.classList.remove('selected'));
-  
   loadAdminCardsTab();
 }
 
@@ -1986,18 +1861,15 @@ function previewCardImage() {
   const preview = document.getElementById('card-image-preview');
   const previewWrap = document.getElementById('card-image-preview-wrap');
   const sizeInfo = document.getElementById('card-image-size-info');
-  
   if (imageInput.files && imageInput.files[0]) {
     const file = imageInput.files[0];
     const fileSizeMB = (file.size / (1024 * 1024)).toFixed(2);
-    
     if (file.size > 3 * 1024 * 1024) {
       sizeInfo.textContent = `❌ ไฟล์ขนาด ${fileSizeMB} MB เกินขนาดสูงสุด 3 MB`;
       sizeInfo.style.color = 'var(--red)';
       previewWrap.style.display = 'none';
       return;
     }
-    
     const reader = new FileReader();
     reader.onload = function(e) {
       preview.src = e.target.result;
@@ -2029,43 +1901,23 @@ async function confirmDeleteCard() {
   loadAdminCardsTab();
 }
 
-async function adminGiveCard() {
-  const guildId = document.getElementById('c-guild').value;
-  const cardId  = document.getElementById('c-card').value;
-  if (!guildId || !cardId) return toast('เลือกกิลด์และการ์ดก่อน', 'var(--red)');
-  const { error } = await db.from('guild_cards').insert({ guild_id: guildId, card_id: cardId, used: false });
-  if (error) return toast('เกิดข้อผิดพลาด: '+error.message, 'var(--red)');
-  const { data: card }  = await db.from('cards').select('name').eq('id', cardId).single();
-  const { data: guild } = await db.from('guilds').select('name').eq('id', guildId).single();
-  await logActivity('Admin', `มอบการ์ด "${card?.name}" ให้กิลด์ "${guild?.name}"`, parseInt(guildId), 'give_card');
-  toast(`🎁 มอบการ์ด "${card?.name}" ให้ "${guild?.name}" แล้ว!`);
-}
-
-// ─── CARD INVENTORY: CARD COPIES ──────────
+// ─── CARD COPIES (4-digit) ──────────────────────
 async function adminCreateCardCopy() {
   const cardId = parseInt(document.getElementById('copy-card-template').value);
   const cardNumber = document.getElementById('copy-card-number').value.trim();
-  if (!cardId || !cardNumber) return toast('เลือกการ์ดและใส่หมายเลข 3 หลัก', 'var(--red)');
+  if (!cardId || !cardNumber) return toast('เลือกการ์ดและใส่หมายเลข 4 หลัก', 'var(--red)');
   if (!/^\d{4}$/.test(cardNumber)) return toast('หมายเลขต้องเป็นตัวเลข 4 หลัก (เช่น 0001)', 'var(--red)');
-  
   const { data: card } = await db.from('cards').select('name,icon').eq('id', cardId).single();
   if (!card) return toast('ไม่พบการ์ด', 'var(--red)');
-  
-  const { data: existing } = await db.from('card_copies').select('id').eq('card_number', cardNumber).single();
+  const { data: existing } = await db.from('card_copies').select('id').eq('card_number', cardNumber).maybeSingle();
   if (existing) return toast(`หมายเลข ${cardNumber} มีการใช้แล้ว`, 'var(--amber)');
-  
   const { data: cardCopy, error: insertError } = await db.from('card_copies').insert({
     card_id: cardId,
     card_number: cardNumber,
     status: 'void'
   }).select().single();
-  
   if (insertError) return toast('เกิดข้อผิดพลาด: ' + insertError.message, 'var(--red)');
-  
-  // Log in activity
   await logActivity('Admin', `สร้างสำเนาการ์ด #${cardNumber} "${card.name}"`, null, 'create_card_copy');
-  
-  // Log in card inventory history
   await db.from('card_inventory_history').insert({
     card_copy_id: cardCopy.id,
     action: 'create',
@@ -2073,7 +1925,6 @@ async function adminCreateCardCopy() {
     to_status: 'void',
     notes: `สร้างสำเนาการ์ด "${card.name}"`
   });
-  
   toast(`✨ สร้างสำเนาการ์ด #${cardNumber} "${card.name}" เข้าคลังสมบัติแล้ว!`, 'var(--green)');
   document.getElementById('copy-card-number').value = '';
   loadAdminCardsTab();
@@ -2083,28 +1934,17 @@ async function adminAssignCardToGuild() {
   const cardCopyId = parseInt(document.getElementById('void-card-copy').value);
   const guildId = parseInt(document.getElementById('assign-guild').value);
   if (!cardCopyId || !guildId) return toast('เลือกการ์ดจากคลังสมบัติและกิลด์', 'var(--red)');
-  
-  // Get card copy info
   const { data: cardCopy } = await db.from('card_copies').select('*, cards(name,icon)').eq('id', cardCopyId).single();
   if (!cardCopy || cardCopy.status !== 'void') return toast('การ์ดนี้ไม่อยู่ในคลังสมบัติ', 'var(--red)');
-  
-  // Get guild info
   const { data: guild } = await db.from('guilds').select('name').eq('id', guildId).single();
   if (!guild) return toast('ไม่พบกิลด์', 'var(--red)');
-  
-  // Update card copy
   const { error: updateError } = await db.from('card_copies').update({
     status: 'guild',
     guild_id: guildId,
     assigned_at: new Date().toISOString()
   }).eq('id', cardCopyId);
-  
   if (updateError) return toast('เกิดข้อผิดพลาด: ' + updateError.message, 'var(--red)');
-  
-  // Log in activity
   await logActivity('Admin', `มอบการ์ด #${cardCopy.card_number} "${cardCopy.cards?.name}" ให้กิลด์ "${guild.name}"`, guildId, 'assign_card_to_guild');
-  
-  // Log in card inventory history
   await db.from('card_inventory_history').insert({
     card_copy_id: cardCopyId,
     action: 'assign_to_guild',
@@ -2114,7 +1954,6 @@ async function adminAssignCardToGuild() {
     to_guild_id: guildId,
     notes: `มอบให้กิลด์ "${guild.name}"`
   });
-  
   toast(`🎁 มอบการ์ด #${cardCopy.card_number} ให้ "${guild.name}" แล้ว!`, 'var(--green)');
   document.getElementById('void-card-copy').value = '';
   document.getElementById('assign-guild').value = '';
@@ -2130,22 +1969,15 @@ async function returnCardToVoid(cardCopyId, cardNumber) {
 async function confirmReturnCardToVoid() {
   closeModal('modal-return-void');
   const cardCopyId = state.pendingReturnCardCopyId;
-  
   const { data: cardCopy } = await db.from('card_copies').select('*, cards(name)').eq('id', cardCopyId).single();
   if (!cardCopy) return toast('ไม่พบการ์ด', 'var(--red)');
-  
   const { error: updateError } = await db.from('card_copies').update({
     status: 'void',
     guild_id: null,
     assigned_at: null
   }).eq('id', cardCopyId);
-  
   if (updateError) return toast('เกิดข้อผิดพลาด: ' + updateError.message, 'var(--red)');
-  
-  // Log in activity
   await logActivity('Admin', `คืนการ์ด #${cardCopy.card_number} ไปคลังสมบัติ (Void)`, null, 'return_card_to_void');
-  
-  // Log in card inventory history
   await db.from('card_inventory_history').insert({
     card_copy_id: cardCopyId,
     action: 'move_to_void',
@@ -2154,39 +1986,20 @@ async function confirmReturnCardToVoid() {
     to_status: 'void',
     notes: `คืนการ์ด #${cardCopy.card_number} "${cardCopy.cards?.name}" ไปคลังสมบัติ`
   });
-  
   toast(`🔄 คืนการ์ด #${cardCopy.card_number} ไปคลังสมบัติแล้ว!`, 'var(--amber)');
   loadAdminCardsTab();
 }
 
 async function loadAdminCardsTab() {
   initCardEmojiGrid();
-  
-  // Load card copy template
   const { data: cards } = await db.from('cards').select('*').order('created_at', { ascending: false });
   document.getElementById('copy-card-template').innerHTML = (cards||[]).map(c => `<option value="${c.id}">${c.icon} ${c.name}</option>`).join('');
   document.getElementById('assign-guild').innerHTML = '<option value="">-- เลือกกิลด์ --</option>';
-  
-  // Load guilds for assignment
   const { data: guilds } = await db.from('guilds').select('id,name');
   const guildOptions = (guilds||[]).map(g => `<option value="${g.id}">${g.name}</option>`).join('');
   document.getElementById('assign-guild').innerHTML += guildOptions;
-  
-  // Load void inventory
   loadVoidInventory();
-  
-  // Load card status list
   loadCardStatusList();
-  
-  // Load card templates
-  const cGuild = document.getElementById('c-guild');
-  const cCard  = document.getElementById('c-card');
-  if (cGuild && cCard) {
-    cGuild.innerHTML = (guilds||[]).map(g => `<option value="${g.id}">${g.name}</option>`).join('');
-    cCard.innerHTML = (cards||[]).map(c => `<option value="${c.id}">${c.icon} ${c.name}</option>`).join('');
-  }
-  
-  // Load card templates grid
   const wrap = document.getElementById('admin-all-cards');
   if (wrap) {
     wrap.innerHTML = (cards||[]).map(c => {
@@ -2219,21 +2032,17 @@ async function loadAdminCardsTab() {
 async function loadVoidInventory() {
   const wrap = document.getElementById('admin-void-inventory');
   if (!wrap) return;
-  
   const { data: voidCards } = await db.from('card_copies')
     .select('*, cards(name,icon)')
     .eq('status', 'void')
     .order('card_number', { ascending: true });
-  
   if (!voidCards || voidCards.length === 0) {
     wrap.innerHTML = '<div class="muted" style="font-size:.85rem;padding:12px;text-align:center;">📭 ว่างเปล่า - ไม่มีการ์ดในคลังสมบัติ</div>';
     document.getElementById('void-count').textContent = '0';
     document.getElementById('void-card-copy').innerHTML = '<option value="">-- ไม่มีการ์ด --</option>';
     return;
   }
-  
   document.getElementById('void-count').textContent = voidCards.length;
-  
   wrap.innerHTML = voidCards.map(vc => `
     <div class="card-item" style="cursor:pointer;transition:all .2s;" onclick="showCardCopyDetails(${vc.id})">
       <div class="card-emoji">${vc.cards?.icon||'🃏'}</div>
@@ -2241,7 +2050,6 @@ async function loadVoidInventory() {
       <div class="card-name">${vc.cards?.name||'?'}</div>
     </div>
   `).join('');
-  
   document.getElementById('void-card-copy').innerHTML = '<option value="">-- เลือกการ์ด --</option>' +
     voidCards.map(vc => `<option value="${vc.id}">📦 #${vc.card_number} - ${vc.cards?.name||'?'}</option>`).join('');
 }
@@ -2249,21 +2057,17 @@ async function loadVoidInventory() {
 async function loadCardStatusList() {
   const wrap = document.getElementById('admin-card-status-list');
   if (!wrap) return;
-  
   const { data: allCards } = await db.from('card_copies')
     .select('*, cards(name,icon), guilds(name)')
     .order('created_at', { ascending: false });
-  
   if (!allCards || allCards.length === 0) {
     wrap.innerHTML = '<div class="muted">ยังไม่มีการ์ด</div>';
     return;
   }
-  
   wrap.innerHTML = allCards.map(cc => {
     const statusIcon = cc.status === 'void' ? '✓' : cc.status === 'guild' ? '🎯' : '✔️';
     const statusColor = cc.status === 'void' ? 'var(--cyan)' : cc.status === 'guild' ? 'var(--green)' : 'var(--muted)';
     const guildInfo = cc.guilds ? ` · 🏰 ${cc.guilds.name}` : '';
-    
     return `
       <div class="card-item">
         <div class="card-emoji">${cc.cards?.icon||'🃏'}</div>
@@ -2283,13 +2087,10 @@ async function showCardCopyDetails(cardCopyId) {
     .select('*, cards(name,icon,effect), guilds(name), card_inventory_history(*)')
     .eq('id', cardCopyId)
     .single();
-  
   if (!cc) return;
-  
-  const statusLabel = cc.status === 'void' ? '✓ อยู่ในคลังสมบัติ' : 
-                      cc.status === 'guild' ? `🎯 มอบให้ ${cc.guilds?.name}` : 
+  const statusLabel = cc.status === 'void' ? '✓ อยู่ในคลังสมบัติ' :
+                      cc.status === 'guild' ? `🎯 มอบให้ ${cc.guilds?.name}` :
                       '✔️ ใช้แล้ว';
-  
   let content = `
     <div style="margin-bottom:16px;">
       <div style="font-size:2rem;text-align:center;margin-bottom:10px;">${cc.cards?.icon||'🃏'}</div>
@@ -2304,7 +2105,7 @@ async function showCardCopyDetails(cardCopyId) {
     </div>
     <div style="background:var(--surface);border-radius:8px;padding:10px;margin-top:12px;">
       <div style="font-size:.8rem;font-weight:700;color:var(--gold);margin-bottom:8px;">📋 ประวัติ</div>
-      ${(cc.card_inventory_history||[]).length === 0 ? 
+      ${(cc.card_inventory_history||[]).length === 0 ?
         '<div style="font-size:.75rem;color:var(--muted);">ไม่มีประวัติ</div>' :
         (cc.card_inventory_history||[]).map(h => `
           <div style="font-size:.75rem;color:var(--text);margin-bottom:4px;padding:6px;background:var(--card);border-radius:4px;">
@@ -2316,12 +2117,10 @@ async function showCardCopyDetails(cardCopyId) {
       }
     </div>
   `;
-  
   document.getElementById('modal-card-copy-content').innerHTML = content;
   document.getElementById('modal-card-copy-details').classList.add('open');
 }
 
-// ─── ADMIN: COMPETITIONS ─────────────────────────
 async function loadAdminCompTab() { loadAdminCompList(); }
 
 async function loadAdminCompList() {
@@ -2380,7 +2179,6 @@ async function deleteCompetition(compId) {
   loadAdminCompList();
 }
 
-// ─── ADMIN: LOG ──────────────────────────────────
 async function loadAdminLog() {
   const wrap = document.getElementById('console-log');
   if (!wrap) return;
@@ -2392,7 +2190,6 @@ async function loadAdminLog() {
   }).join('');
 }
 
-// ─── HELPERS ─────────────────────────────────────
 async function initSystemCards() {
   const { data: existing } = await db.from('cards').select('id').limit(1);
   if (existing && existing.length > 0) return;
