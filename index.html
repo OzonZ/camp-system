@@ -710,10 +710,9 @@
     /* ── TEAM BLOCKS (member dashboard) ── */
     .teams-area {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-      gap: 20px;
-      min-height: 180px;
-      padding: 12px 0;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+      padding: 4px 0;
       margin-bottom: 16px;
     }
 
@@ -725,16 +724,16 @@
 
     .team-block {
       background: #fff;
-      border: none;
-      border-radius: 20px;
-      padding: 20px;
-      box-shadow: 0 10px 25px rgba(0, 0, 0, .06);
-      transition: all .25s;
+      border: 1.5px solid #e8edf2;
+      border-radius: 14px;
+      padding: 14px 16px;
+      box-shadow: none;
+      transition: all .2s;
     }
 
     .team-block:hover {
       border-color: var(--blue);
-      box-shadow: 0 4px 16px rgba(45, 125, 210, .12);
+      box-shadow: 0 2px 12px rgba(45, 125, 210, .1);
     }
 
     .team-block-name {
@@ -1096,34 +1095,40 @@
     /* Guild card — no type badge, just clean */
     .guild-scroll-wrap {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-      gap: 24px;
+      grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+      gap: 12px;
     }
 
     .guild-big-card {
-      background: transparent;
-      border: none;
-      border-radius: 18px;
-      padding: 0;
+      background: #fff;
+      border: 1.5px solid #e8edf2;
+      border-radius: 14px;
+      padding: 14px 16px;
       cursor: pointer;
-      transition: all .25s cubic-bezier(.4, 0, .2, 1);
+      transition: all .2s;
       position: relative;
     }
 
     .guild-big-card:hover {
-      transform: translateY(-8px);
+      border-color: var(--blue);
+      box-shadow: 0 4px 20px rgba(45, 125, 210, .1);
+      transform: translateY(-2px);
     }
 
-    /* Reference Style: Image or Icon as a header */
+    .guild-big-card.mine {
+      border-color: var(--blue);
+      background: #f5f9ff;
+    }
+
+    .guild-big-card.locked {
+      opacity: .65;
+      cursor: not-allowed;
+    }
+
     .guild-big-visual {
       display: none;
     }
 
-    .guild-big-card:hover .guild-big-visual {
-      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
-    }
-
-    /* Team type chips inside guild card */
     .guild-type-chips {
       display: flex;
       flex-wrap: wrap;
@@ -2349,32 +2354,29 @@
 
         return `
           <div class="guild-big-card ${isLocked ? 'locked' : ''} ${isMine ? 'mine' : ''}"
-            onclick="${isLocked ? `toast('ออกจากกิลด์ของคุณก่อน','var(--amber)')` : `joinGuild(${g.id})`}">
-            
-            <div style="margin-bottom: 4px;">
-              <span style="
-                font-family:'Space Grotesk',sans-serif;
-                font-size: 2rem;
-                font-weight: 800;
-                color: #1a2c45;
-                text-shadow: 0 4px 16px rgba(0,0,0,0.12), 0 1px 0 rgba(255,255,255,0.8);
-                letter-spacing: -.01em;
-                line-height: 1.1;
-              ">${g.name}</span>
-              ${isMine ? `<span style="color:var(--blue);font-size:.78rem;font-weight:700;margin-left:10px;">● คุณอยู่ที่นี่</span>` : ''}
+            onclick="${isLocked ? `toast('ออกจากกิลด์ของคุณก่อน','var(--amber)')` : (`joinGuild(${g.id})`)}">
+            <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;">
+              <div style="flex:1;min-width:0;">
+                <div style="font-family:'Space Grotesk',sans-serif;font-size:1.1rem;font-weight:800;color:#1a2c45;
+                  text-shadow:0 2px 8px rgba(0,0,0,.08);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
+                  ${g.name}${isMine ? ` <span style="color:var(--blue);font-size:.7rem;font-weight:700;">● คุณ</span>` : ''}
+                </div>
+                ${leader
+            ? `<div style="font-size:.78rem;color:var(--gold);font-weight:700;margin-top:2px;">👑 ${leader.name}</div>`
+            : `<div style="font-size:.76rem;color:var(--red);margin-top:2px;">⚠️ ไม่มีหัวกิลด์</div>`}
+              </div>
+              <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex-shrink:0;">
+                <span class="level-badge lv-${lvInfo.current.lv}" style="font-size:.72rem;padding:3px 8px;">
+                  ${lvInfo.current.icon} Lv.${lvInfo.current.lv}
+                </span>
+                <div style="font-size:.7rem;color:var(--muted);">${g.xp || 0} XP</div>
+              </div>
             </div>
-
-            ${leader
-            ? `<div style="font-size:.85rem;font-weight:700;color:var(--gold);margin-bottom:8px;text-shadow:0 2px 8px rgba(230,168,23,.25);">👑 ${leader.name}</div>`
-            : `<div style="font-size:.82rem;color:var(--red);margin-bottom:8px;">⚠️ ยังไม่มีหัวกิลด์</div>`}
-
-            <div style="display:flex;align-items:center;gap:12px;margin-bottom:10px;">
-              <span class="level-badge lv-${lvInfo.current.lv}">${lvInfo.current.icon} Lv.${lvInfo.current.lv}</span>
-              ${typeChips}
+            ${typeChips ? `<div class="flex-gap" style="margin:6px 0 4px;">${typeChips}</div>` : ''}
+            <div style="height:1px;background:#f0f3f7;margin:8px 0;"></div>
+            <div class="news-members-preview" style="gap:4px;">
+              ${memberChips || '<span class="muted" style="font-size:.76rem;">ยังไม่มีสมาชิก</span>'}
             </div>
-
-            <div class="news-members-preview">${memberChips || '<span class="muted" style="font-size:.8rem;">ยังไม่มีสมาชิก</span>'}</div>
-            <div style="margin-top:12px;height:1px;background:linear-gradient(90deg,rgba(0,0,0,0.06) 0%,transparent 100%);"></div>
           </div>
         `;
       }).join('');
@@ -2542,14 +2544,19 @@
         const done = approvedTeamIds.size;
         const pct = Math.round((done / totalTeams) * 100);
         progressWrap.innerHTML = `
-      <div style="background:#f0f7ff;border:1px solid #cce0ff;border-radius:12px;padding:14px;">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
-          <div style="font-weight:700;color:#1a4a7a;font-size:.92rem;">📊 ความคืบหน้าของกิลด์</div>
-          <div style="font-size:.82rem;font-weight:700;color:${pct >= 100 ? 'var(--green)' : 'var(--blue)'};">${done}/${totalTeams} กลุ่ม (${pct}%)</div>
-        </div>
-        <div class="prog-wrap" style="height:8px;"><div class="prog-fill prog-green" style="width:${pct}%"></div></div>
+  <div style="display:flex;align-items:center;gap:12px;background:#f5f9ff;border:1.5px solid #cce0ff;
+    border-radius:10px;padding:10px 14px;">
+    <div style="flex:1;">
+      <div style="font-weight:700;color:#1a4a7a;font-size:.85rem;margin-bottom:4px;">📊 ความคืบหน้ากิลด์</div>
+      <div class="prog-wrap" style="height:6px;margin:0;">
+        <div class="prog-fill prog-green" style="width:${pct}%"></div>
       </div>
-    `;
+    </div>
+    <div style="font-size:.88rem;font-weight:800;color:${pct >= 100 ? 'var(--green)' : 'var(--blue)'};">
+      ${done}/${totalTeams}<span style="font-size:.7rem;font-weight:500;color:var(--muted);margin-left:2px;">กลุ่ม</span>
+    </div>
+  </div>
+`;
       } else if (progressWrap) { progressWrap.innerHTML = ''; }
       const subMap = {};
       (allSubs || []).forEach(s => {
