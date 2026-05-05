@@ -91,9 +91,13 @@ CREATE TABLE cards (
   icon TEXT NOT NULL,
   name TEXT NOT NULL,
   effect TEXT,
+  image_data TEXT, -- Base64 encoded image (max 3 MB)
+  image_mime_type TEXT DEFAULT 'image/png', -- 'image/png', 'image/jpeg', etc.
   created_at TIMESTAMP DEFAULT NOW()
 );
 ```
+
+**Note:** `image_data` stores base64-encoded card images up to 3 MB. Use base64 encoding to store images directly in the database for easy retrieval and guild member access.
 
 ### 8. Guild Cards Table (Legacy - for backwards compatibility)
 ```sql

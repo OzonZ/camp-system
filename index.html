@@ -638,6 +638,17 @@
           <div class="form-group"><label>ชื่อการ์ด</label><input id="card-name-input" placeholder="ชื่อการ์ด…"/></div>
           <div class="form-group"><label>ผลการ์ด</label><input id="card-effect-input" placeholder="ผลของการ์ด…"/></div>
         </div>
+        <div class="form-group">
+          <label>🖼️ รูปภาพการ์ด (JPEG/PNG, สูงสุด 3 MB)</label>
+          <div style="display:flex;gap:8px;margin-bottom:8px;">
+            <input id="card-image-input" type="file" accept="image/png,image/jpeg" style="flex:1"/>
+            <button class="btn btn-outline btn-sm" onclick="previewCardImage()">👁️ ดูตัวอย่าง</button>
+          </div>
+          <div id="card-image-preview-wrap" style="text-align:center;display:none;margin-bottom:10px;">
+            <img id="card-image-preview" style="max-width:100%;max-height:200px;border-radius:8px;border:1px solid var(--border);"/>
+          </div>
+          <div id="card-image-size-info" style="font-size:.75rem;color:var(--muted);"></div>
+        </div>
         <button class="btn btn-purple btn-full" onclick="adminCreateCard()">✨ สร้างการ์ด</button>
       </div>
       <div class="card">
@@ -1251,36 +1262,128 @@ async function loadMemberCards() {
   if (state.role !== 'leader') note.textContent = '(เฉพาะหัวกิลด์ใช้ได้)';
   else note.textContent = '';
   wrap.innerHTML = '<div class="muted">กำลังโหลด…</div>';
+  
+  // Fetch both legacy guild_cards and new card_copies
   const { data: gc } = await db.from('guild_cards').select('*, cards(*)').eq('guild_id', state.guildId);
-  if (!gc || gc.length === 0) { wrap.innerHTML = '<div class="empty" style="grid-column:1/-1">ยังไม่มีการ์ด</div>'; return; }
-  wrap.innerHTML = gc.map(item => {
-    const c = item.cards;
-    return `
-      <div class="card-item ${item.used ? 'card-used' : ''}">
-        <div class="card-emoji">${c?.icon || '🃏'}</div>
-        <div class="card-name">${c?.name || ''}</div>
-        <div class="card-effect">${c?.effect || ''}</div>
-        ${state.role === 'leader' && !item.used
-          ? `<button class="btn btn-sm btn-accent btn-full" onclick="openUseCard(${item.id},'${escStr(c?.name)}','${escStr(c?.effect)}')">✨ ใช้การ์ด</button>`
-          : ''}
-      </div>
-    `;
+  const { data: cc } = await db.from('card_copies')
+    .select('*, cards(*)')
+    .eq('status', 'guild')
+    .eq('guild_id', state.guildId);
+  
+  const allCards = [];
+  
+  // Add legacy cards
+  if (gc && gc.length > 0) {
+    allCards.push(...gc.map(item => ({
+      type: 'legacy',
+      id: item.id,
+      used: item.used,
+      card: item.cards,
+      cardNumber: null
+    })));
+  }
+  
+  // Add new card copies
+  if (cc && cc.length > 0) {
+    allCards.push(...cc.map(item => ({
+      type: 'copy',
+      id: item.id,
+      used: false,
+      card: item.cards,
+      cardNumber: item.card_number
+    })));
+  }
+  
+  if (allCards.length === 0) { 
+    wrap.innerHTML = '<div class="empty" style="grid-column:1/-1">ยังไม่มีการ์ด</div>'; 
+    return; 
+  }
+  
+  wrap.innerHTML = allCards.map(item => {
+    const c = item.card;
+    const hasImage = c?.image_data;
+    const cardNumberBadge = item.cardNumber ? `<div style="position:absolute;top:8px;right:8px;background:var(--purple);color:white;padding:4px 8px;border-radius:6px;font-size:.7rem;font-weight:700;">#${item.cardNumber}</div>` : '';
+    
+    if (hasImage) {
+      // Display with card image
+      return `
+        <div class="card-item ${item.used ? 'card-used' : ''}" style="position:relative;padding:12px;">
+          ${cardNumberBadge}
+          <div style="width:100%;aspect-ratio:3/4;overflow:hidden;border-radius:8px;margin-bottom:10px;background:var(--surface);border:1px solid var(--border);">
+            <img src="${c.image_data}" style="width:100%;height:100%;object-fit:cover;" alt="${c?.name}"/>
+          </div>
+          <div class="card-name" style="font-weight:700;margin-bottom:4px;">${c?.name || ''}</div>
+          <div class="card-effect" style="font-size:.75rem;color:var(--muted);margin-bottom:8px;">${c?.effect || ''}</div>
+          ${state.role === 'leader' && !item.used
+            ? `<button class="btn btn-sm btn-accent btn-full" onclick="openUseCard(${item.id},'${escStr(c?.name)}','${escStr(c?.effect)}','${item.type}')">✨ ใช้การ์ด</button>`
+            : ''}
+        </div>
+      `;
+    } else {
+      // Display without image (legacy or no image)
+      return `
+        <div class="card-item ${item.used ? 'card-used' : ''}" style="position:relative;">
+          ${cardNumberBadge}
+          <div class="card-emoji">${c?.icon || '🃏'}</div>
+          <div class="card-name">${c?.name || ''}</div>
+          <div class="card-effect">${c?.effect || ''}</div>
+          ${state.role === 'leader' && !item.used
+            ? `<button class="btn btn-sm btn-accent btn-full" onclick="openUseCard(${item.id},'${escStr(c?.name)}','${escStr(c?.effect)}','${item.type}')">✨ ใช้การ์ด</button>`
+            : ''}
+        </div>
+      `;
+    }
   }).join('');
 }
 
-function openUseCard(gcId, name, effect) {
-  state.pendingGuildCardId = gcId;
+function openUseCard(id, name, effect, cardType) {
+  state.pendingGuildCardId = id;
+  state.pendingCardType = cardType || 'legacy';
   document.getElementById('modal-card-desc').textContent = `"${name}" — ${effect}`;
   document.getElementById('modal-use-card').classList.add('open');
 }
 
 async function confirmUseCard() {
   closeModal('modal-use-card');
-  await db.from('guild_cards').update({ used: true }).eq('id', state.pendingGuildCardId);
-  const { data: gc } = await db.from('guild_cards').select('cards(name)').eq('id', state.pendingGuildCardId).single();
-  const cardName = gc?.cards?.name || 'การ์ด';
-  await logActivity(state.name, `ใช้การ์ด "${cardName}"`, state.guildId, 'use_card');
-  toast(`✨ ใช้การ์ด "${cardName}" แล้ว!`, 'var(--purple)');
+  const cardType = state.pendingCardType || 'legacy';
+  const cardId = state.pendingGuildCardId;
+  
+  if (cardType === 'copy') {
+    // Handle new card_copies type
+    const { data: cc } = await db.from('card_copies').select('*, cards(name)').eq('id', cardId).single();
+    if (cc) {
+      const cardName = cc.cards?.name || 'การ์ด';
+      // Update status to 'used'
+      await db.from('card_copies').update({ 
+        status: 'used',
+        used_by_member_name: state.name,
+        used_at: new Date().toISOString()
+      }).eq('id', cardId);
+      
+      // Log in activity
+      await logActivity(state.name, `ใช้การ์ด #${cc.card_number} "${cardName}"`, state.guildId, 'use_card');
+      
+      // Log in card inventory history
+      await db.from('card_inventory_history').insert({
+        card_copy_id: cardId,
+        action: 'use_card',
+        admin_name: state.name,
+        from_status: 'guild',
+        to_status: 'used',
+        notes: `ใช้โดย ${state.name}`
+      });
+      
+      toast(`✨ ใช้การ์ด #${cc.card_number} "${cardName}" แล้ว!`, 'var(--purple)');
+    }
+  } else {
+    // Handle legacy guild_cards type
+    await db.from('guild_cards').update({ used: true }).eq('id', cardId);
+    const { data: gc } = await db.from('guild_cards').select('cards(name)').eq('id', cardId).single();
+    const cardName = gc?.cards?.name || 'การ์ด';
+    await logActivity(state.name, `ใช้การ์ด "${cardName}"`, state.guildId, 'use_card');
+    toast(`✨ ใช้การ์ด "${cardName}" แล้ว!`, 'var(--purple)');
+  }
+  
   loadMemberCards();
 }
 
@@ -1817,17 +1920,97 @@ async function adminCreateCard() {
   const icon = document.getElementById('card-icon-input').value.trim() || '🃏';
   const name = document.getElementById('card-name-input').value.trim();
   const effect = document.getElementById('card-effect-input').value.trim();
+  const imageInput = document.getElementById('card-image-input');
+  
   if (!name) return toast('กรุณาใส่ชื่อการ์ด', 'var(--red)');
-  const { error } = await db.from('cards').insert({ icon, name, effect });
+  
+  let imageData = null;
+  let imageMimeType = null;
+  
+  // Handle image upload if provided
+  if (imageInput.files && imageInput.files[0]) {
+    const file = imageInput.files[0];
+    
+    // Validate file size (max 3 MB)
+    if (file.size > 3 * 1024 * 1024) {
+      return toast('รูปภาพต้องไม่เกิน 3 MB', 'var(--red)');
+    }
+    
+    // Validate file type
+    if (!['image/png', 'image/jpeg'].includes(file.type)) {
+      return toast('รองรับเฉพาะ PNG หรือ JPEG เท่านั้น', 'var(--red)');
+    }
+    
+    // Convert to base64
+    try {
+      imageData = await new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
+      imageMimeType = file.type;
+    } catch (err) {
+      return toast('เกิดข้อผิดพลาดในการอ่านรูปภาพ: ' + err.message, 'var(--red)');
+    }
+  }
+  
+  const { error } = await db.from('cards').insert({ 
+    icon, 
+    name, 
+    effect,
+    image_data: imageData,
+    image_mime_type: imageMimeType
+  });
+  
   if (error) return toast('เกิดข้อผิดพลาด: ' + error.message, 'var(--red)');
-  await logActivity('Admin', `สร้างการ์ดใหม่ "${name}"`, null, 'create_card');
+  
+  await logActivity('Admin', `สร้างการ์ดใหม่ "${name}"${imageData ? ' (มีรูป)' : ''}`, null, 'create_card');
   toast('✨ สร้างการ์ดแล้ว!');
+  
+  // Clear form
   document.getElementById('card-icon-input').value = '';
   document.getElementById('card-name-input').value = '';
   document.getElementById('card-effect-input').value = '';
   document.getElementById('card-icon-preview').textContent = '🃏';
+  document.getElementById('card-image-input').value = '';
+  document.getElementById('card-image-preview-wrap').style.display = 'none';
+  document.getElementById('card-image-size-info').textContent = '';
   document.querySelectorAll('.emoji-opt').forEach(el => el.classList.remove('selected'));
+  
   loadAdminCardsTab();
+}
+
+function previewCardImage() {
+  const imageInput = document.getElementById('card-image-input');
+  const preview = document.getElementById('card-image-preview');
+  const previewWrap = document.getElementById('card-image-preview-wrap');
+  const sizeInfo = document.getElementById('card-image-size-info');
+  
+  if (imageInput.files && imageInput.files[0]) {
+    const file = imageInput.files[0];
+    const fileSizeMB = (file.size / (1024 * 1024)).toFixed(2);
+    
+    if (file.size > 3 * 1024 * 1024) {
+      sizeInfo.textContent = `❌ ไฟล์ขนาด ${fileSizeMB} MB เกินขนาดสูงสุด 3 MB`;
+      sizeInfo.style.color = 'var(--red)';
+      previewWrap.style.display = 'none';
+      return;
+    }
+    
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      preview.src = e.target.result;
+      previewWrap.style.display = 'block';
+      sizeInfo.textContent = `✓ ไฟล์ขนาด ${fileSizeMB} MB - พร้อมอัปโหลด`;
+      sizeInfo.style.color = 'var(--green)';
+    };
+    reader.readAsDataURL(file);
+  } else {
+    previewWrap.style.display = 'none';
+    sizeInfo.textContent = 'ไม่มีรูปภาพ';
+    sizeInfo.style.color = 'var(--muted)';
+  }
 }
 
 async function askDeleteCard(cardId, cardName) {
@@ -1980,7 +2163,7 @@ async function loadAdminCardsTab() {
   initCardEmojiGrid();
   
   // Load card copy template
-  const { data: cards } = await db.from('cards').select('id,icon,name').order('created_at', { ascending: false });
+  const { data: cards } = await db.from('cards').select('*').order('created_at', { ascending: false });
   document.getElementById('copy-card-template').innerHTML = (cards||[]).map(c => `<option value="${c.id}">${c.icon} ${c.name}</option>`).join('');
   document.getElementById('assign-guild').innerHTML = '<option value="">-- เลือกกิลด์ --</option>';
   
@@ -2006,13 +2189,30 @@ async function loadAdminCardsTab() {
   // Load card templates grid
   const wrap = document.getElementById('admin-all-cards');
   if (wrap) {
-    wrap.innerHTML = (cards||[]).map(c => `
-      <div class="card-item">
-        <div class="card-emoji">${c.icon}</div>
-        <div class="card-name">${c.name}</div>
-        <button class="btn btn-red btn-sm btn-full" style="margin-top:8px;" onclick="askDeleteCard(${c.id},'${escStr(c.name)}')">🗑️ ลบ</button>
-      </div>
-    `).join('');
+    wrap.innerHTML = (cards||[]).map(c => {
+      const hasImage = c.image_data;
+      if (hasImage) {
+        return `
+          <div class="card-item" style="padding:0;overflow:hidden;">
+            <div style="width:100%;aspect-ratio:3/4;overflow:hidden;background:var(--surface);border:1px solid var(--border);">
+              <img src="${c.image_data}" style="width:100%;height:100%;object-fit:cover;" alt="${c.name}"/>
+            </div>
+            <div style="padding:10px;">
+              <div class="card-name" style="margin-bottom:4px;">${c.name}</div>
+              <button class="btn btn-red btn-sm btn-full" onclick="askDeleteCard(${c.id},'${escStr(c.name)}')">🗑️ ลบ</button>
+            </div>
+          </div>
+        `;
+      } else {
+        return `
+          <div class="card-item">
+            <div class="card-emoji">${c.icon}</div>
+            <div class="card-name">${c.name}</div>
+            <button class="btn btn-red btn-sm btn-full" style="margin-top:8px;" onclick="askDeleteCard(${c.id},'${escStr(c.name)}')">🗑️ ลบ</button>
+          </div>
+        `;
+      }
+    }).join('');
   }
 }
 
