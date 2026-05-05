@@ -1201,7 +1201,7 @@
     }
 
     #console-log {
-      background: #040609;
+      background: var(--raised);
       border: 1px solid var(--border);
       border-radius: 10px;
       padding: 14px;
@@ -1209,21 +1209,23 @@
       overflow-y: auto;
       font-family: 'Space Grotesk', monospace;
       font-size: .77rem;
-      color: #7dd3fc;
+      color: var(--text);
     }
 
     .log-line {
-      padding: 2px 0;
-      border-bottom: 1px solid rgba(255, 255, 255, .03);
+      padding: 4px 0;
+      border-bottom: 1px solid var(--border);
     }
 
     .log-line .ts {
       color: var(--muted);
       margin-right: 8px;
+      font-weight: 500;
     }
 
     .log-line .act {
-      color: var(--gold);
+      color: var(--blue);
+      font-weight: 600;
     }
 
     .modal-overlay {
