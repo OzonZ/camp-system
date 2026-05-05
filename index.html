@@ -11,12 +11,12 @@
     rel="stylesheet" />
   <style>
     :root {
-      --bg: #f0f2f5;
-      --surface: #ffffff;
-      --card: #ffffff;
-      --raised: #f8f9fa;
-      --border: #e2e6ea;
-      --border2: #ced4da;
+      --bg: #fdfaf5;
+      --surface: transparent;
+      --card: transparent;
+      --raised: rgba(0, 0, 0, 0.03);
+      --border: transparent;
+      --border2: rgba(0, 0, 0, 0.08);
       --blue: #2d7dd2;
       --blue2: #1a6bc4;
       --cyan: #17a2b8;
@@ -34,8 +34,9 @@
       --lv4: #6f42c1;
       --lv5: #e6a817;
       --lv6: #dc3545;
-      --login-bg1: #b8d8f8;
-      --login-bg2: #dceffe;
+      --login-bg1: #fdfaf5;
+      --login-bg2: #f5f1ea;
+      --txt-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
     }
 
     body.dark {
@@ -237,9 +238,8 @@
       background: var(--card);
       border: 1px solid var(--border);
       border-radius: 16px;
-      padding: 20px;
-      margin-bottom: 14px;
-      box-shadow: 0 2px 8px rgba(0, 0, 0, .06);
+      padding: 0;
+      margin-bottom: 24px;
     }
 
     .card-title {
@@ -578,12 +578,11 @@
     .tab-bar {
       display: flex;
       gap: 3px;
-      margin-bottom: 18px;
+      margin-bottom: 24px;
       flex-wrap: wrap;
-      background: #f0f2f5;
-      padding: 4px;
-      border-radius: 12px;
-      border: 1px solid var(--border);
+      background: rgba(0, 0, 0, 0.04);
+      padding: 6px;
+      border-radius: 14px;
     }
 
     .tab-btn {
@@ -713,13 +712,10 @@
     /* ── TEAM BLOCKS (member dashboard) ── */
     .teams-area {
       display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 14px;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: 20px;
       min-height: 180px;
-      background: var(--raised);
-      border-radius: 14px;
-      padding: 14px;
-      border: 1.5px dashed var(--border2);
+      padding: 12px 0;
       margin-bottom: 16px;
     }
 
@@ -730,12 +726,12 @@
     }
 
     .team-block {
-      background: var(--card);
-      border: 1.5px solid var(--border);
-      border-radius: 14px;
-      padding: 14px;
-      box-shadow: 0 2px 8px rgba(0, 0, 0, .05);
-      transition: all .2s;
+      background: #fff;
+      border: none;
+      border-radius: 20px;
+      padding: 20px;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, .06);
+      transition: all .25s;
     }
 
     .team-block:hover {
@@ -746,11 +742,11 @@
     .team-block-name {
       font-family: 'Space Grotesk', sans-serif;
       font-weight: 700;
-      font-size: .95rem;
+      font-size: 1.1rem;
       color: #1a2c45;
-      margin-bottom: 8px;
-      border-bottom: 1.5px solid var(--border);
+      margin-bottom: 12px;
       padding-bottom: 8px;
+      text-shadow: var(--txt-shadow);
     }
 
     .team-block-count {
@@ -1100,35 +1096,44 @@
     }
 
     /* Guild card — no type badge, just clean */
-    .guild-sel {
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: 14px;
-      padding: 16px;
+    .guild-scroll-wrap {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 24px;
+    }
+
+    .guild-big-card {
+      background: transparent;
+      border: none;
+      border-radius: 18px;
+      padding: 0;
       cursor: pointer;
-      transition: all .2s;
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
+      transition: all .25s cubic-bezier(.4, 0, .2, 1);
       position: relative;
     }
 
-    .guild-sel:hover {
-      border-color: var(--blue);
-      background: var(--raised);
-      transform: translateY(-2px);
+    .guild-big-card:hover {
+      transform: translateY(-8px);
     }
 
-    .guild-sel.locked {
-      cursor: not-allowed;
-      opacity: .7;
-      border-color: var(--amber) !important;
+    /* Reference Style: Image or Icon as a header */
+    .guild-big-visual {
+      width: 100%;
+      aspect-ratio: 16/9;
+      background: #eee;
+      border-radius: 20px;
+      margin-bottom: 12px;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 3rem;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+      transition: box-shadow .25s;
     }
 
-    .guild-sel-name {
-      font-family: 'Space Grotesk', sans-serif;
-      font-size: .95rem;
-      font-weight: 700;
+    .guild-big-card:hover .guild-big-visual {
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
     }
 
     /* Team type chips inside guild card */
@@ -1470,26 +1475,24 @@
       font-size: .9rem;
     }
 
-    /* NEWS TAB (Facebook-style scroll) */
+    /* NEWS TAB (Grid layout) */
     .news-feed {
-      display: flex;
-      flex-direction: column;
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
       gap: 16px;
       padding-bottom: 40px;
     }
 
     .news-card {
-      background: #fff;
-      border: 1px solid var(--border);
-      border-radius: 16px;
-      padding: 20px;
-      box-shadow: 0 1px 3px rgba(0, 0, 0, .1);
-      transition: transform .2s;
+      background: transparent;
+      border: none;
+      border-radius: 20px;
+      padding: 0;
+      transition: transform .25s;
     }
 
     .news-card:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 8px 24px rgba(0, 0, 0, .08);
+      transform: translateY(-4px);
     }
 
     .news-card-header {
@@ -1518,8 +1521,9 @@
     .news-card-guild {
       font-family: 'Space Grotesk', sans-serif;
       font-weight: 700;
-      font-size: 1.05rem;
+      font-size: 1.2rem;
       color: var(--text);
+      text-shadow: var(--txt-shadow);
     }
 
     .news-card-meta {
@@ -1750,13 +1754,14 @@
 
       <!-- TAB: สมาชิก/กลุ่ม -->
       <div id="tab-teams" class="tab-content active">
-        <div class="card">
+        <div style="padding: 0 4px;">
           <div
-            style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:8px;">
-            <div class="card-title" style="margin-bottom:0;">👥 กลุ่มในกิลด์ <span class="muted"
-                style="font-size:.78rem;">(สูงสุด 3 กลุ่ม)</span></div>
-            <button id="btn-create-team" class="btn btn-accent btn-sm" onclick="toggleCreateTeamBox()"
-              style="background:#2d7dd2;">+ สร้างกลุ่ม</button>
+            style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;flex-wrap:wrap;gap:8px;">
+            <div class="card-title"
+              style="margin-bottom:0; font-size: 1rem; color: var(--text); text-shadow: var(--txt-shadow);">👥
+              กลุ่มในกิลด์ <span class="muted" style="font-size:.78rem;">(สูงสุด 3 กลุ่ม)</span></div>
+            <button id="btn-create-team" class="btn btn-accent btn-sm" onclick="toggleCreateTeamBox()">+
+              สร้างกลุ่ม</button>
           </div>
           <div id="create-team-box" class="member-create-team-box" style="display:none;">
             <div class="section-title">➕ สร้างกลุ่มใหม่</div>
@@ -2378,21 +2383,20 @@
         const typeChips = types.map(tp => `<span class="badge badge-${typeClass(tp)}">${typeIcon(tp)} ${tp}</span>`).join('');
         return `
       <div class="guild-big-card ${isLocked ? 'locked' : ''} ${isMine ? 'mine' : ''}" onclick="${isLocked ? `toast('ออกจากกิลด์ของคุณก่อน','var(--amber)')` : (`joinGuild(${g.id})`)}">
+        <div class="guild-big-visual" style="background:${isMine ? 'linear-gradient(135deg, #fff5f0, #ffede6)' : '#fff'};">
+          ${isMine ? '🏡' : '🏰'}
+        </div>
         <div class="guild-big-card-header">
           <div>
-            <div class="guild-big-name">🏰 ${g.name}</div>
-            ${leader ? `<div class="guild-big-leader">👑 หัวกิลด์: ${leader.name}</div>` : '<div class="guild-big-leader" style="color:var(--red);">⚠️ ยังไม่มีหัวกิลด์</div>'}
+            <div class="guild-big-name" style="text-shadow: var(--txt-shadow); font-size: 1.3rem;">${g.name}</div>
+            ${leader ? `<div class="guild-big-leader">👑 หัวหน้ากิลด์: ${leader.name}</div>` : '<div class="guild-big-leader" style="color:var(--red);">⚠️ ยังไม่มีหัวหน้า</div>'}
           </div>
           <div style="display:flex;flex-direction:column;align-items:flex-end;gap:5px;">
             <div class="level-badge lv-${lvInfo.current.lv}">${lvInfo.current.icon} Lv.${lvInfo.current.lv}</div>
-            <div class="muted" style="font-size:.78rem;">👥 ${members.length} คน</div>
-            ${isMine ? '<span class="badge badge-member">✓ กิลด์ของคุณ</span>' : ''}
-            ${isLocked ? '<span class="badge badge-pending">🔒 คุณอยู่กิลด์อื่น</span>' : ''}
           </div>
         </div>
-        ${typeChips ? `<div class="flex-gap" style="margin-top:8px;">${typeChips}</div>` : ''}
-        <div class="guild-big-members-label">สมาชิกกิลด์</div>
-        <div class="guild-members-chips">${memberChips || '<span class="muted" style="font-size:.8rem;">ยังไม่มีสมาชิก</span>'}</div>
+        ${typeChips ? `<div class="flex-gap" style="margin:12px 0;">${typeChips}</div>` : ''}
+        <div class="news-members-preview" style="margin-top:10px;">${memberChips || '<span class="muted" style="font-size:.8rem;">ยังไม่มีสมาชิก</span>'}</div>
       </div>
     `;
       }).join('');
@@ -2515,19 +2519,16 @@
           ).join('');
           return `
             <div class="news-card">
-              <div class="news-card-header">
-                <div class="news-card-avatar">🏰</div>
+              <div class="guild-big-visual" style="background:#fff; aspect-ratio: 16/10; font-size: 4rem;">🏰</div>
+              <div class="news-card-header" style="margin-top:12px; margin-bottom:8px;">
                 <div class="news-card-info">
-                  <div class="news-card-guild">${g.name}</div>
+                  <div class="news-card-guild" style="text-shadow: 0 2px 4px rgba(0,0,0,0.15); font-size: 1.25rem;">${g.name}</div>
                   <div class="news-card-meta">Lv.${lv.current.lv} · ${members.length} สมาชิก</div>
                 </div>
-                <div class="level-badge lv-${lv.current.lv}" style="padding:2px 8px;font-size:.65rem;">${lv.current.lv}</div>
               </div>
-              <div class="news-card-content">
+              <div class="news-card-content" style="color:var(--muted); font-size:0.85rem; margin-bottom:12px; min-height: 40px;">
                 ${g.description || 'กิลด์นี้ยังไม่มีคำอธิบาย…'}
-                ${leader ? `<div style="margin-top:8px;font-weight:700;color:var(--gold);font-size:.82rem;">👑 หัวกิลด์: ${leader.name}</div>` : ''}
               </div>
-              <div class="guild-big-members-label" style="margin-top:0;margin-bottom:8px;">สมาชิกปัจจุบัน</div>
               <div class="news-members-preview">${chips || '<span class="muted">ไม่มีสมาชิก</span>'}</div>
             </div>
           `;
