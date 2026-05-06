@@ -3,6 +3,7 @@ import * as utils from './utils.js';
 import * as auth from './auth.js';
 import * as member from './member.js';
 import * as admin from './admin.js';
+import { openAssignCard, confirmAssignCard } from './admin.js';
 
 // -------------------------------------------------------------
 // 🔥 โยนฟังก์ชันทั้งหมดขึ้นไปผูกบน Window ให้ HTML มันมองเห็น 
@@ -71,6 +72,8 @@ window.openFinishComp = admin.openFinishComp;
 window.confirmFinishComp = admin.confirmFinishComp;
 window.deleteCompetition = admin.deleteCompetition;
 window.loadAdminLog = admin.loadAdminLog;
+window.openAssignCard = openAssignCard;
+window.confirmAssignCard = confirmAssignCard;
 
 
 // -------------------------------------------------------------

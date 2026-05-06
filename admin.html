@@ -1,256 +1,757 @@
-<!DOCTYPE html>
-<html lang="th">
+<!doctype html>
+<html lang="th" class="dark">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>⚔️ Guild Camp System - Admin</title>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            game: {
+              bg:      '#08090f',
+              card:    '#0f1420',
+              surface: '#141925',
+              border:  '#1e2740',
+              muted:   '#4a5578',
+              text:    '#c8d0e8',
+            },
+            accent: {
+              gold:   '#f0a500',
+              orange: '#ff6b00',
+              red:    '#ef233c',
+              green:  '#22c55e',
+              blue:   '#38bdf8',
+              purple: '#a855f7',
+              amber:  '#f59e0b',
+            }
+          },
+          fontFamily: {
+            sans: ['Kanit', 'sans-serif'],
+            mono: ['Space Grotesk', 'monospace'],
+          },
+          boxShadow: {
+            'glow-gold':   '0 0 20px rgba(240,165,0,0.25)',
+            'glow-orange': '0 0 20px rgba(255,107,0,0.25)',
+            'glow-red':    '0 0 20px rgba(239,35,60,0.25)',
+            'glow-green':  '0 0 20px rgba(34,197,94,0.25)',
+          }
+        }
+      }
+    }
+  </script>
   <style>
+    body { font-family: 'Kanit', sans-serif; background: #08090f; color: #c8d0e8; }
 
+    .screen { display: none; opacity: 0; }
+    .screen.active { display: block; animation: fadeUp 0.4s cubic-bezier(0.16,1,0.3,1) forwards; }
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(16px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .tab-content { display: none; }
+    .tab-content.active { display: block; animation: fadeUp 0.3s ease forwards; }
+
+    /* Modal */
+    .modal-overlay {
+      display: none; position: fixed; inset: 0;
+      background: rgba(0,0,0,0.75); backdrop-filter: blur(6px);
+      z-index: 50; align-items: center; justify-content: center;
+    }
+    .modal-overlay.open { display: flex; animation: fadeUp 0.25s ease forwards; }
+
+    /* Toast */
+    #toast {
+      position: fixed; bottom: 30px; left: 50%;
+      transform: translateX(-50%) translateY(100px);
+      padding: 12px 24px; border-radius: 12px; font-weight: 600;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+      transition: transform 0.4s cubic-bezier(0.4,0,0.2,1);
+      z-index: 999; pointer-events: none;
+      background: #0f1420; color: #f8fafc; border: 1px solid #1e2740;
+    }
+    #toast.show { transform: translateX(-50%) translateY(0); }
+
+    /* Scrollbar */
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: #08090f; }
+    ::-webkit-scrollbar-thumb { background: #1e2740; border-radius: 3px; }
+
+    /* Tab active glow */
+    .tab-btn.active {
+      background: linear-gradient(135deg, rgba(240,165,0,0.15), rgba(255,107,0,0.1));
+      border-color: rgba(240,165,0,0.4);
+      color: #f0a500;
+    }
+
+    /* Input focus glow */
+    input:focus, select:focus, textarea:focus {
+      outline: none;
+      border-color: rgba(240,165,0,0.5);
+      box-shadow: 0 0 0 3px rgba(240,165,0,0.08);
+    }
+
+    /* Prog bar */
+    .prog-wrap { height: 5px; background: #1e2740; border-radius: 99px; overflow: hidden; margin-top: 8px; }
+    .prog-fill { height: 100%; border-radius: 99px; background: linear-gradient(90deg, #f0a500, #ff6b00); transition: width 0.6s ease; }
+
+    /* Level badge colors */
+    .lv-1 { background: rgba(75,85,99,0.3); color: #9ca3af; border-color: rgba(75,85,99,0.4); }
+    .lv-2 { background: rgba(5,150,105,0.2); color: #34d399; border-color: rgba(52,211,153,0.3); }
+    .lv-3 { background: rgba(37,99,235,0.2); color: #60a5fa; border-color: rgba(96,165,250,0.3); }
+    .lv-4 { background: rgba(124,58,237,0.2); color: #a78bfa; border-color: rgba(167,139,250,0.3); }
+    .lv-5 { background: rgba(240,165,0,0.2); color: #f0a500; border-color: rgba(240,165,0,0.4); }
+
+    /* Card grid */
+    .grid-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 14px; }
   </style>
 </head>
-<body>
-  <div id="app">
-    <div id="screen-admin" class="screen active">
-      <div class="top-nav">
-        <div class="nav-brand">🐹 Admin Panel · <span style="color:var(--muted);font-weight:400;font-size:.8rem;">Control Center</span></div>
-        <div class="nav-right">
-          <span class="nav-user" id="admin-nav-user">Admin</span>
-          <button class="btn btn-red btn-sm" onclick="logout()">ออกจากระบบ</button>
-        </div>
-      </div>
-      <div class="tab-bar">
-        <button class="tab-btn active" onclick="showTab('a-tab-guilds','admin')">🏰 กิลด์</button>
-        <button class="tab-btn" onclick="showTab('a-tab-teams','admin')">👥 กลุ่ม</button>
-        <button class="tab-btn" onclick="showTab('a-tab-quests','admin')">📜 เควส</button>
-        <button class="tab-btn" onclick="showTab('a-tab-submissions','admin')">📬 ส่งงาน</button>
-        <button class="tab-btn" onclick="showTab('a-tab-cards','admin')">🃏 การ์ด</button>
-        <button class="tab-btn" onclick="showTab('a-tab-comp','admin')">🏁 แข่งขัน</button>
-        <button class="tab-btn" onclick="showTab('a-tab-log','admin')">📡 Log</button>
-        <button class="tab-btn" onclick="showTab('a-tab-lb','admin')">🏆 อันดับ</button>
-      </div>
+<body class="min-h-screen bg-game-bg">
 
-      <div id="a-tab-guilds" class="tab-content active"><div id="admin-guilds-list"></div></div>
-      
-      <div id="a-tab-teams" class="tab-content">
-        <div class="card">
-          <div class="card-title">➕ สร้างกลุ่ม (Admin)</div>
-          <div class="notice notice-warn" style="margin-bottom:12px;">⚠️ สมาชิกสูงสุด 3 คนต่อกลุ่ม</div>
-          <div class="grid-2">
-            <div class="form-group"><label>เลือกกิลด์</label><select id="admin-team-guild-sel" onchange="loadAdminAllTeams()"></select></div>
-            <div class="form-group"><label>ชื่อกลุ่ม</label><input id="new-team-name" placeholder="ชื่อกลุ่ม…" /></div>
-          </div>
-          <div class="form-group">
-            <label>ประเภทโปรเจกต์</label>
-            <select id="admin-team-type">
-              <option value="Unity">🎮 Unity</option>
-              <option value="Roblox">🟠 Roblox</option>
-              <option value="WebApp">🌐 WebApp</option>
-            </select>
-          </div>
-          <div class="form-group">
-            <label>สมาชิก <span id="admin-team-count-chip" class="count-chip chip-ok" style="margin-left:4px;">0/3</span></label>
-            <div id="team-members-builder" class="flex-gap" style="margin-bottom:8px;min-height:24px;"></div>
-            <div style="display:flex;gap:8px;">
-              <input id="team-member-input" placeholder="ชื่อสมาชิก…" style="flex:1" onkeydown="if(event.key==='Enter')addTeamMemberInput()" />
-              <button class="btn btn-accent btn-sm" onclick="addTeamMemberInput()">+ เพิ่ม</button>
-            </div>
-          </div>
-          <button class="btn btn-gold btn-full" onclick="adminCreateTeam()">✨ สร้างกลุ่ม</button>
-        </div>
-        <div class="card">
-          <div class="card-title">👥 กลุ่มทั้งหมด</div>
-          <div id="admin-teams-list"></div>
-        </div>
-      </div>
+<div id="app">
+<div id="screen-admin" class="screen active">
 
-      <div id="a-tab-quests" class="tab-content">
-        <div class="card">
-          <div class="card-title">➕ สร้างเควสใหม่</div>
-          <div class="notice notice-info" style="margin-bottom:12px;">📌 ทุกกลุ่มในกิลด์ต้องส่งงานครบถึงผ่านได้</div>
-          <div class="form-group"><label>ชื่อเควส</label><input id="q-title" placeholder="ชื่อเควส…" /></div>
-          <div class="form-group"><label>คำอธิบาย</label><textarea id="q-desc" placeholder="รายละเอียด…"></textarea></div>
-          <div class="grid-2">
-            <div class="form-group"><label>XP รางวัล</label><input id="q-pts" type="number" value="50" min="0" /></div>
-            <div class="form-group"><label>ไอคอน</label><input id="q-icon" value="⚔️" style="font-size:1.2rem;" /></div>
-          </div>
-          <div class="form-group">
-            <label>มอบให้กิลด์</label>
-            <select id="q-guild"><option value="">— ทุกกิลด์ —</option></select>
-          </div>
-          <button class="btn btn-gold btn-full" onclick="adminCreateQuest()">✨ สร้างเควส</button>
-        </div>
-        <div class="card"><div class="card-title">📜 เควสทั้งหมด</div><div id="admin-quest-list"></div></div>
-      </div>
-
-      <div id="a-tab-submissions" class="tab-content">
-        <div class="card">
-          <div class="card-title">📬 งานที่รอ Approve <span id="pending-count" class="badge badge-pending" style="margin-left:6px;"></span></div>
-          <div id="admin-submissions"></div>
-        </div>
-      </div>
-
-      <div id="a-tab-cards" class="tab-content">
-        <div class="card">
-          <div class="card-title">🔑 คำขอกรอกรหัสการ์ด <span id="redeem-pending-count" class="badge badge-pending" style="margin-left:6px;"></span></div>
-          <div class="notice notice-info" style="margin-bottom:12px;font-size:.82rem;">หัวกิลด์กรอกรหัสมาจาก Discord — ตรวจสอบก่อนอนุมัติ</div>
-          <div id="admin-redeem-requests"></div>
-        </div>
-        <div class="card">
-          <div class="card-title">➕ สร้างการ์ดเทมเพลต</div>
-          <div class="grid-2">
-            <div class="form-group"><label>ไอคอน</label><input id="card-icon-input" value="🃏" placeholder="emoji…" /></div>
-            <div class="form-group"><label>ชื่อการ์ด</label><input id="card-name-input" placeholder="ชื่อการ์ด…" /></div>
-          </div>
-          <div class="form-group"><label>ผลการ์ด</label><input id="card-effect-input" placeholder="ผลของการ์ด…" /></div>
-          <div class="form-group">
-            <label>รหัสการ์ด (unique)</label>
-            <input id="card-code-input" placeholder="CAMP-XXXX…" style="font-family:'Space Grotesk',sans-serif;letter-spacing:.06em;text-transform:uppercase;" oninput="this.value=this.value.toUpperCase()" />
-          </div>
-          <div class="form-group">
-            <label>รูปภาพ (PNG/JPG สูงสุด 3MB, ไม่บังคับ)</label>
-            <input id="card-image-input" type="file" accept="image/png,image/jpeg" />
-            <div id="card-image-preview-wrap" style="display:none;margin-top:8px;"><img id="card-image-preview" style="max-width:100%;max-height:160px;border-radius:10px;border:1px solid var(--border);" /></div>
-          </div>
-          <button class="btn btn-purple btn-full" onclick="adminCreateCard()">✨ สร้างการ์ด</button>
-        </div>
-        <div class="card">
-          <div class="card-title">🃏 การ์ดทั้งหมดในระบบ</div>
-          <div class="notice notice-warn" style="margin-bottom:12px;font-size:.82rem;">⚠️ การ์ดที่ถูกใช้แล้วจะลบไม่ได้</div>
-          <div id="admin-all-cards" class="grid-3"></div>
-        </div>
-      </div>
-
-      <div id="a-tab-comp" class="tab-content">
-        <div class="card">
-          <div class="card-title">➕ สร้างการแข่งขัน</div>
-          <div class="form-group"><label>ชื่อการแข่งขัน</label><input id="comp-name" placeholder="ชื่อการแข่งขัน…" /></div>
-          <button class="btn btn-gold btn-full" onclick="adminCreateCompetition()">🏁 สร้าง</button>
-        </div>
-        <div class="card"><div class="card-title">🏁 การแข่งขันทั้งหมด</div><div id="admin-comp-list"></div></div>
-      </div>
-
-      <div id="a-tab-log" class="tab-content">
-        <div class="card">
-          <div class="card-title">📡 Activity Log</div>
-          <div id="console-log"></div>
-          <button class="btn btn-ghost btn-sm mt-s" onclick="loadAdminLog()">↻ รีเฟรช</button>
-        </div>
-      </div>
-
-      <div id="a-tab-lb" class="tab-content">
-        <div class="card"><div class="card-title">🏆 อันดับกิลด์</div><div id="admin-lb"></div></div>
-      </div>
+  <!-- ══════════════════════════════ TOP NAV ══════════════════════════════ -->
+  <nav class="sticky top-0 z-40 flex items-center justify-between px-5 py-3
+              bg-game-card/90 backdrop-blur border-b border-game-border">
+    <div class="flex items-center gap-2">
+      <span class="text-xl">🐹</span>
+      <span class="font-bold text-white font-mono">Admin Panel</span>
+      <span class="text-game-muted text-xs ml-1">· Control Center</span>
     </div>
-  </div>
-
-
-  <div class="modal-overlay" id="modal-view-img" onclick="closeModal('modal-view-img')">
-    <div style="max-width:90vw;max-height:90vh;"><img id="modal-big-img" style="max-width:100%;max-height:85vh;border-radius:14px;display:block;" alt="" /></div>
-  </div>
-
-  <div class="modal-overlay" id="modal-edit-guild">
-    <div class="modal-box">
-      <div class="modal-title">✏️ แก้ไขกิลด์</div>
-      <input type="hidden" id="edit-guild-id" />
-      <div class="form-group"><label>ชื่อกิลด์</label><input id="edit-guild-name" /></div>
-      <div class="form-group"><label>คำอธิบาย</label><textarea id="edit-guild-desc" style="min-height:60px;"></textarea></div>
-      <div class="form-group"><label>XP ปัจจุบัน</label><input id="edit-guild-xp" type="number" min="0" /></div>
-      <div class="row mt">
-        <button class="btn btn-gold w-full" onclick="confirmEditGuild()">💾 บันทึก</button>
-        <button class="btn btn-ghost w-full" onclick="closeModal('modal-edit-guild')">ยกเลิก</button>
-      </div>
+    <div class="flex items-center gap-3">
+      <span id="admin-nav-user"
+            class="text-sm font-semibold text-accent-gold bg-accent-gold/10
+                   px-3 py-1 rounded-full border border-accent-gold/30">Admin</span>
+      <button onclick="logout()"
+              class="text-xs font-semibold px-3 py-1.5 rounded-lg
+                     bg-accent-red/10 text-accent-red border border-accent-red/30
+                     hover:bg-accent-red hover:text-white transition-all duration-200">
+        ออกจากระบบ
+      </button>
     </div>
+  </nav>
+
+  <!-- ══════════════════════════════ TAB BAR ══════════════════════════════ -->
+  <div class="sticky top-[53px] z-30 flex gap-1 overflow-x-auto px-4 py-2
+              bg-game-bg/95 backdrop-blur border-b border-game-border
+              scrollbar-none">
+    <button class="tab-btn active" onclick="showTab('a-tab-guilds','admin')">🏰 กิลด์</button>
+    <button class="tab-btn" onclick="showTab('a-tab-teams','admin')">👥 กลุ่ม</button>
+    <button class="tab-btn" onclick="showTab('a-tab-quests','admin')">📜 เควส</button>
+    <button class="tab-btn" onclick="showTab('a-tab-submissions','admin')">📬 ส่งงาน</button>
+    <button class="tab-btn" onclick="showTab('a-tab-cards','admin')">🃏 การ์ด</button>
+    <button class="tab-btn" onclick="showTab('a-tab-comp','admin')">🏁 แข่งขัน</button>
+    <button class="tab-btn" onclick="showTab('a-tab-log','admin')">📡 Log</button>
+    <button class="tab-btn" onclick="showTab('a-tab-lb','admin')">🏆 อันดับ</button>
   </div>
 
-  <div class="modal-overlay" id="modal-delete-guild">
-    <div class="modal-box">
-      <div class="modal-title">⚠️ ลบกิลด์</div>
-      <p id="modal-delete-guild-desc" style="margin-bottom:6px;font-size:.95rem;font-weight:600;"></p>
-      <div class="notice notice-danger" style="margin-bottom:16px;">⚠️ ข้อมูลทั้งหมดจะถูกลบถาวร</div>
-      <div class="form-group"><label>พิมพ์ชื่อกิลด์เพื่อยืนยัน</label><input id="delete-guild-confirm-input" placeholder="ชื่อกิลด์…" /></div>
-      <div class="row mt">
-        <button class="btn btn-red w-full" onclick="confirmDeleteGuild()">🗑️ ลบถาวร</button>
-        <button class="btn btn-ghost w-full" onclick="closeModal('modal-delete-guild')">ยกเลิก</button>
-      </div>
+  <!-- ══════════════════════════ TAB CONTENTS ══════════════════════════ -->
+  <div class="max-w-5xl mx-auto px-4 py-6 space-y-4">
+
+    <!-- GUILDS TAB -->
+    <div id="a-tab-guilds" class="tab-content active">
+      <div id="admin-guilds-list"></div>
     </div>
-  </div>
 
-  <div class="modal-overlay" id="modal-manage-members">
-    <div class="modal-box" style="max-width:540px;">
-      <div class="modal-title">👥 จัดการสมาชิก — <span id="modal-members-guild-name"></span></div>
-      <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px;margin-bottom:14px;">
-        <div class="section-title">➕ เพิ่มสมาชิก</div>
-        <div class="grid-2" style="margin-bottom:8px;">
-          <input id="add-member-name" placeholder="ชื่อสมาชิก…" />
-          <select id="add-member-role">
-            <option value="member">⚔️ สมาชิก</option>
-            <option value="leader">👑 หัวกิลด์</option>
+    <!-- TEAMS TAB -->
+    <div id="a-tab-teams" class="tab-content space-y-4">
+      <div class="bg-game-card border border-game-border rounded-2xl p-5">
+        <h2 class="text-base font-bold text-white mb-4">➕ สร้างกลุ่ม (Admin)</h2>
+        <div class="flex items-center gap-2 bg-accent-amber/10 border border-accent-amber/30
+                    rounded-xl px-4 py-2.5 text-sm text-accent-amber mb-4">
+          ⚠️ สมาชิกสูงสุด 3 คนต่อกลุ่ม
+        </div>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
+          <div class="space-y-1">
+            <label class="text-xs font-semibold text-game-muted uppercase tracking-wider">เลือกกิลด์</label>
+            <select id="admin-team-guild-sel" onchange="loadAdminAllTeams()" class="w-full bg-game-surface border border-game-border rounded-xl px-3 py-2.5 text-sm text-white"></select>
+          </div>
+          <div class="space-y-1">
+            <label class="text-xs font-semibold text-game-muted uppercase tracking-wider">ชื่อกลุ่ม</label>
+            <input id="new-team-name" placeholder="ชื่อกลุ่ม…" class="w-full bg-game-surface border border-game-border rounded-xl px-3 py-2.5 text-sm text-white placeholder-game-muted" />
+          </div>
+        </div>
+        <div class="space-y-1 mb-3">
+          <label class="text-xs font-semibold text-game-muted uppercase tracking-wider">ประเภทโปรเจกต์</label>
+          <select id="admin-team-type" class="w-full bg-game-surface border border-game-border rounded-xl px-3 py-2.5 text-sm text-white">
+            <option value="Unity">🎮 Unity</option>
+            <option value="Roblox">🟠 Roblox</option>
+            <option value="WebApp">🌐 WebApp</option>
           </select>
         </div>
-        <button class="btn btn-green btn-sm w-full" onclick="adminAddMember()">+ เพิ่มสมาชิก</button>
+        <div class="space-y-2 mb-4">
+          <label class="text-xs font-semibold text-game-muted uppercase tracking-wider flex items-center gap-2">
+            สมาชิก
+            <span id="admin-team-count-chip" class="text-xs font-bold px-2 py-0.5 rounded-full bg-accent-green/20 text-accent-green border border-accent-green/30">0/3</span>
+          </label>
+          <div id="team-members-builder" class="flex flex-wrap gap-2 min-h-[28px]"></div>
+          <div class="flex gap-2">
+            <input id="team-member-input" placeholder="ชื่อสมาชิก…"
+                   class="flex-1 bg-game-surface border border-game-border rounded-xl px-3 py-2.5 text-sm text-white placeholder-game-muted"
+                   onkeydown="if(event.key==='Enter')addTeamMemberInput()" />
+            <button onclick="addTeamMemberInput()"
+                    class="px-4 py-2.5 rounded-xl bg-accent-blue/20 text-accent-blue border border-accent-blue/30
+                           hover:bg-accent-blue hover:text-white font-semibold text-sm transition-all">+ เพิ่ม</button>
+          </div>
+        </div>
+        <button onclick="adminCreateTeam()"
+                class="w-full py-3 rounded-xl font-bold text-sm
+                       bg-gradient-to-r from-accent-gold to-accent-orange text-game-bg
+                       hover:shadow-glow-gold transition-all duration-300">✨ สร้างกลุ่ม</button>
       </div>
-      <div class="section-title">สมาชิกปัจจุบัน <span id="modal-member-count" class="badge badge-member" style="font-size:.68rem;"></span></div>
-      <div id="modal-members-list"></div>
-      <button class="btn btn-ghost btn-full btn-sm mt-s" onclick="closeModal('modal-manage-members')">ปิด</button>
+      <div class="bg-game-card border border-game-border rounded-2xl p-5">
+        <h2 class="text-base font-bold text-white mb-4">👥 กลุ่มทั้งหมด</h2>
+        <div id="admin-teams-list"></div>
+      </div>
+    </div>
+
+    <!-- QUESTS TAB -->
+    <div id="a-tab-quests" class="tab-content space-y-4">
+      <div class="bg-game-card border border-game-border rounded-2xl p-5">
+        <h2 class="text-base font-bold text-white mb-4">➕ สร้างเควสใหม่</h2>
+        <div class="flex items-center gap-2 bg-accent-blue/10 border border-accent-blue/30
+                    rounded-xl px-4 py-2.5 text-sm text-accent-blue mb-4">
+          📌 ทุกกลุ่มในกิลด์ต้องส่งงานครบถึงผ่านได้
+        </div>
+        <div class="space-y-3">
+          <div class="space-y-1">
+            <label class="text-xs font-semibold text-game-muted uppercase tracking-wider">ชื่อเควส</label>
+            <input id="q-title" placeholder="ชื่อเควส…" class="w-full bg-game-surface border border-game-border rounded-xl px-3 py-2.5 text-sm text-white placeholder-game-muted" />
+          </div>
+          <div class="space-y-1">
+            <label class="text-xs font-semibold text-game-muted uppercase tracking-wider">คำอธิบาย</label>
+            <textarea id="q-desc" placeholder="รายละเอียด…" rows="3"
+                      class="w-full bg-game-surface border border-game-border rounded-xl px-3 py-2.5 text-sm text-white placeholder-game-muted resize-none"></textarea>
+          </div>
+          <div class="grid grid-cols-2 gap-3">
+            <div class="space-y-1">
+              <label class="text-xs font-semibold text-game-muted uppercase tracking-wider">XP รางวัล</label>
+              <input id="q-pts" type="number" value="50" min="0" class="w-full bg-game-surface border border-game-border rounded-xl px-3 py-2.5 text-sm text-white" />
+            </div>
+            <div class="space-y-1">
+              <label class="text-xs font-semibold text-game-muted uppercase tracking-wider">ไอคอน</label>
+              <input id="q-icon" value="⚔️" class="w-full bg-game-surface border border-game-border rounded-xl px-3 py-2.5 text-xl" />
+            </div>
+          </div>
+          <div class="space-y-1">
+            <label class="text-xs font-semibold text-game-muted uppercase tracking-wider">มอบให้กิลด์</label>
+            <select id="q-guild" class="w-full bg-game-surface border border-game-border rounded-xl px-3 py-2.5 text-sm text-white">
+              <option value="">— ทุกกิลด์ —</option>
+            </select>
+          </div>
+        </div>
+        <button onclick="adminCreateQuest()"
+                class="w-full mt-4 py-3 rounded-xl font-bold text-sm
+                       bg-gradient-to-r from-accent-gold to-accent-orange text-game-bg
+                       hover:shadow-glow-gold transition-all duration-300">✨ สร้างเควส</button>
+      </div>
+      <div class="bg-game-card border border-game-border rounded-2xl p-5">
+        <h2 class="text-base font-bold text-white mb-4">📜 เควสทั้งหมด</h2>
+        <div id="admin-quest-list"></div>
+      </div>
+    </div>
+
+    <!-- SUBMISSIONS TAB -->
+    <div id="a-tab-submissions" class="tab-content">
+      <div class="bg-game-card border border-game-border rounded-2xl p-5">
+        <h2 class="text-base font-bold text-white mb-4 flex items-center gap-2">
+          📬 งานที่รอ Approve
+          <span id="pending-count"
+                class="text-xs font-bold px-2 py-0.5 rounded-full
+                       bg-accent-amber/20 text-accent-amber border border-accent-amber/30"></span>
+        </h2>
+        <div id="admin-submissions"></div>
+      </div>
+    </div>
+
+    <!-- CARDS TAB -->
+    <div id="a-tab-cards" class="tab-content space-y-4">
+      <!-- Redeem requests -->
+      <div class="bg-game-card border border-game-border rounded-2xl p-5">
+        <h2 class="text-base font-bold text-white mb-1 flex items-center gap-2">
+          🔑 คำขอกรอกรหัสการ์ด
+          <span id="redeem-pending-count"
+                class="text-xs font-bold px-2 py-0.5 rounded-full
+                       bg-accent-amber/20 text-accent-amber border border-accent-amber/30"></span>
+        </h2>
+        <p class="text-xs text-game-muted mb-4">หัวกิลด์กรอกรหัสมาจาก Discord — ตรวจสอบก่อนอนุมัติ</p>
+        <div id="admin-redeem-requests"></div>
+      </div>
+
+      <!-- Create card -->
+      <div class="bg-game-card border border-game-border rounded-2xl p-5">
+        <h2 class="text-base font-bold text-white mb-4">➕ สร้างการ์ดเทมเพลต</h2>
+        <div class="space-y-3">
+          <div class="grid grid-cols-2 gap-3">
+            <div class="space-y-1">
+              <label class="text-xs font-semibold text-game-muted uppercase tracking-wider">ไอคอน</label>
+              <input id="card-icon-input" value="🃏" placeholder="emoji…" class="w-full bg-game-surface border border-game-border rounded-xl px-3 py-2.5 text-xl" />
+            </div>
+            <div class="space-y-1">
+              <label class="text-xs font-semibold text-game-muted uppercase tracking-wider">ชื่อการ์ด</label>
+              <input id="card-name-input" placeholder="ชื่อการ์ด…" class="w-full bg-game-surface border border-game-border rounded-xl px-3 py-2.5 text-sm text-white placeholder-game-muted" />
+            </div>
+          </div>
+          <div class="space-y-1">
+            <label class="text-xs font-semibold text-game-muted uppercase tracking-wider">ผลการ์ด</label>
+            <input id="card-effect-input" placeholder="ผลของการ์ด…" class="w-full bg-game-surface border border-game-border rounded-xl px-3 py-2.5 text-sm text-white placeholder-game-muted" />
+          </div>
+          <div class="space-y-1">
+            <label class="text-xs font-semibold text-game-muted uppercase tracking-wider">รหัสการ์ด (unique)</label>
+            <input id="card-code-input" placeholder="CAMP-XXXX…"
+                   class="w-full bg-game-surface border border-game-border rounded-xl px-3 py-2.5 text-sm text-white font-mono tracking-widest placeholder-game-muted uppercase"
+                   oninput="this.value=this.value.toUpperCase()" />
+          </div>
+          <div class="space-y-1">
+            <label class="text-xs font-semibold text-game-muted uppercase tracking-wider">รูปภาพ (PNG/JPG สูงสุด 3MB, ไม่บังคับ)</label>
+            <input id="card-image-input" type="file" accept="image/png,image/jpeg"
+                   class="w-full text-sm text-game-muted file:mr-3 file:py-2 file:px-4
+                          file:rounded-lg file:border-0 file:text-xs file:font-bold
+                          file:bg-accent-purple/20 file:text-accent-purple hover:file:bg-accent-purple/30" />
+            <div id="card-image-preview-wrap" class="hidden mt-2">
+              <img id="card-image-preview" class="max-h-40 rounded-xl border border-game-border" />
+            </div>
+          </div>
+        </div>
+        <button onclick="adminCreateCard()"
+                class="w-full mt-4 py-3 rounded-xl font-bold text-sm
+                       bg-gradient-to-r from-accent-purple to-accent-blue text-white
+                       hover:opacity-90 transition-all duration-300">✨ สร้างการ์ด</button>
+      </div>
+
+      <!-- All cards -->
+      <div class="bg-game-card border border-game-border rounded-2xl p-5">
+        <h2 class="text-base font-bold text-white mb-1">🃏 การ์ดทั้งหมดในระบบ</h2>
+        <p class="text-xs text-accent-amber mb-4">⚠️ การ์ดที่ถูกใช้แล้วจะลบไม่ได้</p>
+        <div id="admin-all-cards" class="grid-cards"></div>
+      </div>
+    </div>
+
+    <!-- COMPETITION TAB -->
+    <div id="a-tab-comp" class="tab-content space-y-4">
+      <div class="bg-game-card border border-game-border rounded-2xl p-5">
+        <h2 class="text-base font-bold text-white mb-4">➕ สร้างการแข่งขัน</h2>
+        <div class="space-y-1 mb-4">
+          <label class="text-xs font-semibold text-game-muted uppercase tracking-wider">ชื่อการแข่งขัน</label>
+          <input id="comp-name" placeholder="ชื่อการแข่งขัน…" class="w-full bg-game-surface border border-game-border rounded-xl px-3 py-2.5 text-sm text-white placeholder-game-muted" />
+        </div>
+        <button onclick="adminCreateCompetition()"
+                class="w-full py-3 rounded-xl font-bold text-sm
+                       bg-gradient-to-r from-accent-gold to-accent-orange text-game-bg
+                       hover:shadow-glow-gold transition-all duration-300">🏁 สร้าง</button>
+      </div>
+      <div class="bg-game-card border border-game-border rounded-2xl p-5">
+        <h2 class="text-base font-bold text-white mb-4">🏁 การแข่งขันทั้งหมด</h2>
+        <div id="admin-comp-list"></div>
+      </div>
+    </div>
+
+    <!-- LOG TAB -->
+    <div id="a-tab-log" class="tab-content">
+      <div class="bg-game-card border border-game-border rounded-2xl p-5">
+        <h2 class="text-base font-bold text-white mb-4">📡 Activity Log</h2>
+        <div id="console-log" class="font-mono text-xs space-y-1 max-h-[500px] overflow-y-auto"></div>
+        <button onclick="loadAdminLog()"
+                class="mt-4 px-4 py-2 text-xs font-semibold rounded-lg
+                       bg-game-surface border border-game-border text-game-muted
+                       hover:text-white hover:border-game-muted transition-all">↻ รีเฟรช</button>
+      </div>
+    </div>
+
+    <!-- LEADERBOARD TAB -->
+    <div id="a-tab-lb" class="tab-content">
+      <div class="bg-game-card border border-game-border rounded-2xl p-5">
+        <h2 class="text-base font-bold text-white mb-4">🏆 อันดับกิลด์</h2>
+        <div id="admin-lb"></div>
+      </div>
+    </div>
+
+  </div><!-- end max-w-5xl -->
+</div><!-- end screen-admin -->
+</div><!-- end app -->
+
+<!-- ═══════════════════════════ MODALS ═══════════════════════════ -->
+
+<!-- View Image -->
+<div class="modal-overlay" id="modal-view-img" onclick="closeModal('modal-view-img')">
+  <div class="max-w-[90vw] max-h-[90vh]">
+    <img id="modal-big-img" class="max-w-full max-h-[85vh] rounded-2xl block" alt="" />
+  </div>
+</div>
+
+<!-- Edit Guild -->
+<div class="modal-overlay" id="modal-edit-guild">
+  <div class="bg-game-card border border-game-border rounded-2xl p-6 w-full max-w-md mx-4">
+    <h3 class="text-lg font-bold text-white mb-5">✏️ แก้ไขกิลด์</h3>
+    <input type="hidden" id="edit-guild-id" />
+    <div class="space-y-3 mb-5">
+      <div class="space-y-1">
+        <label class="text-xs font-semibold text-game-muted uppercase tracking-wider">ชื่อกิลด์</label>
+        <input id="edit-guild-name" class="w-full bg-game-surface border border-game-border rounded-xl px-3 py-2.5 text-sm text-white" />
+      </div>
+      <div class="space-y-1">
+        <label class="text-xs font-semibold text-game-muted uppercase tracking-wider">คำอธิบาย</label>
+        <textarea id="edit-guild-desc" rows="3" class="w-full bg-game-surface border border-game-border rounded-xl px-3 py-2.5 text-sm text-white resize-none"></textarea>
+      </div>
+      <div class="space-y-1">
+        <label class="text-xs font-semibold text-game-muted uppercase tracking-wider">XP ปัจจุบัน</label>
+        <input id="edit-guild-xp" type="number" min="0" class="w-full bg-game-surface border border-game-border rounded-xl px-3 py-2.5 text-sm text-white" />
+      </div>
+    </div>
+    <div class="flex gap-3">
+      <button onclick="confirmEditGuild()"
+              class="flex-1 py-2.5 rounded-xl font-bold text-sm bg-gradient-to-r from-accent-gold to-accent-orange text-game-bg hover:shadow-glow-gold transition-all">💾 บันทึก</button>
+      <button onclick="closeModal('modal-edit-guild')"
+              class="flex-1 py-2.5 rounded-xl font-bold text-sm bg-game-surface border border-game-border text-game-muted hover:text-white transition-all">ยกเลิก</button>
     </div>
   </div>
+</div>
 
-  <div class="modal-overlay" id="modal-edit-member">
-    <div class="modal-box" style="max-width:360px;">
-      <div class="modal-title">✏️ แก้ไขสมาชิก</div>
-      <input type="hidden" id="edit-member-id" />
-      <div class="form-group"><label>ชื่อ</label><input id="edit-member-name" /></div>
-      <div class="form-group"><label>บทบาท</label>
-        <select id="edit-member-role">
+<!-- Delete Guild -->
+<div class="modal-overlay" id="modal-delete-guild">
+  <div class="bg-game-card border border-game-border rounded-2xl p-6 w-full max-w-md mx-4">
+    <h3 class="text-lg font-bold text-white mb-2">⚠️ ลบกิลด์</h3>
+    <p id="modal-delete-guild-desc" class="font-semibold text-white mb-3"></p>
+    <div class="flex items-center gap-2 bg-accent-red/10 border border-accent-red/30 rounded-xl px-4 py-2.5 text-sm text-accent-red mb-4">
+      ⚠️ ข้อมูลทั้งหมดจะถูกลบถาวร
+    </div>
+    <div class="space-y-1 mb-5">
+      <label class="text-xs font-semibold text-game-muted uppercase tracking-wider">พิมพ์ชื่อกิลด์เพื่อยืนยัน</label>
+      <input id="delete-guild-confirm-input" placeholder="ชื่อกิลด์…" class="w-full bg-game-surface border border-game-border rounded-xl px-3 py-2.5 text-sm text-white placeholder-game-muted" />
+    </div>
+    <div class="flex gap-3">
+      <button onclick="confirmDeleteGuild()"
+              class="flex-1 py-2.5 rounded-xl font-bold text-sm bg-accent-red/20 text-accent-red border border-accent-red/40 hover:bg-accent-red hover:text-white transition-all">🗑️ ลบถาวร</button>
+      <button onclick="closeModal('modal-delete-guild')"
+              class="flex-1 py-2.5 rounded-xl font-bold text-sm bg-game-surface border border-game-border text-game-muted hover:text-white transition-all">ยกเลิก</button>
+    </div>
+  </div>
+</div>
+
+<!-- Manage Members -->
+<div class="modal-overlay" id="modal-manage-members">
+  <div class="bg-game-card border border-game-border rounded-2xl p-6 w-full max-w-lg mx-4 max-h-[90vh] overflow-y-auto">
+    <h3 class="text-lg font-bold text-white mb-4">👥 จัดการสมาชิก — <span id="modal-members-guild-name" class="text-accent-gold"></span></h3>
+    <div class="bg-game-surface border border-game-border rounded-xl p-4 mb-4">
+      <p class="text-xs font-bold text-game-muted uppercase tracking-wider mb-3">➕ เพิ่มสมาชิก</p>
+      <div class="grid grid-cols-2 gap-2 mb-2">
+        <input id="add-member-name" placeholder="ชื่อสมาชิก…" class="bg-game-bg border border-game-border rounded-lg px-3 py-2 text-sm text-white placeholder-game-muted" />
+        <select id="add-member-role" class="bg-game-bg border border-game-border rounded-lg px-3 py-2 text-sm text-white">
           <option value="member">⚔️ สมาชิก</option>
           <option value="leader">👑 หัวกิลด์</option>
         </select>
       </div>
-      <div class="row mt">
-        <button class="btn btn-gold w-full" onclick="confirmEditMember()">💾 บันทึก</button>
-        <button class="btn btn-ghost w-full" onclick="closeModal('modal-edit-member')">ยกเลิก</button>
+      <button onclick="adminAddMember()"
+              class="w-full py-2 rounded-lg font-bold text-sm bg-accent-green/20 text-accent-green border border-accent-green/30 hover:bg-accent-green hover:text-game-bg transition-all">+ เพิ่มสมาชิก</button>
+    </div>
+    <div class="flex items-center gap-2 mb-3">
+      <p class="text-xs font-bold text-game-muted uppercase tracking-wider">สมาชิกปัจจุบัน</p>
+      <span id="modal-member-count" class="text-xs font-bold px-2 py-0.5 rounded-full bg-accent-blue/20 text-accent-blue border border-accent-blue/30"></span>
+    </div>
+    <div id="modal-members-list" class="space-y-2 mb-4"></div>
+    <button onclick="closeModal('modal-manage-members')"
+            class="w-full py-2.5 rounded-xl font-bold text-sm bg-game-surface border border-game-border text-game-muted hover:text-white transition-all">ปิด</button>
+  </div>
+</div>
+
+<!-- Edit Member -->
+<div class="modal-overlay" id="modal-edit-member">
+  <div class="bg-game-card border border-game-border rounded-2xl p-6 w-full max-w-sm mx-4">
+    <h3 class="text-lg font-bold text-white mb-5">✏️ แก้ไขสมาชิก</h3>
+    <input type="hidden" id="edit-member-id" />
+    <div class="space-y-3 mb-5">
+      <div class="space-y-1">
+        <label class="text-xs font-semibold text-game-muted uppercase tracking-wider">ชื่อ</label>
+        <input id="edit-member-name" class="w-full bg-game-surface border border-game-border rounded-xl px-3 py-2.5 text-sm text-white" />
+      </div>
+      <div class="space-y-1">
+        <label class="text-xs font-semibold text-game-muted uppercase tracking-wider">บทบาท</label>
+        <select id="edit-member-role" class="w-full bg-game-surface border border-game-border rounded-xl px-3 py-2.5 text-sm text-white">
+          <option value="member">⚔️ สมาชิก</option>
+          <option value="leader">👑 หัวกิลด์</option>
+        </select>
       </div>
     </div>
-  </div>
-
-  <div class="modal-overlay" id="modal-approve-redeem">
-    <div class="modal-box">
-      <div class="modal-title">🃏 อนุมัติรหัสการ์ด</div>
-      <div id="modal-approve-redeem-content" style="margin-bottom:16px;"></div>
-      <div class="row">
-        <button class="btn btn-green w-full" onclick="confirmApproveRedeem(true)">✅ อนุมัติ</button>
-        <button class="btn btn-red w-full" onclick="confirmApproveRedeem(false)">❌ ปฏิเสธ</button>
-      </div>
-      <button class="btn btn-ghost btn-full btn-sm mt-s" onclick="closeModal('modal-approve-redeem')">ยกเลิก</button>
+    <div class="flex gap-3">
+      <button onclick="confirmEditMember()"
+              class="flex-1 py-2.5 rounded-xl font-bold text-sm bg-gradient-to-r from-accent-gold to-accent-orange text-game-bg hover:shadow-glow-gold transition-all">💾 บันทึก</button>
+      <button onclick="closeModal('modal-edit-member')"
+              class="flex-1 py-2.5 rounded-xl font-bold text-sm bg-game-surface border border-game-border text-game-muted hover:text-white transition-all">ยกเลิก</button>
     </div>
   </div>
+</div>
 
-  <div class="modal-overlay" id="modal-delete-card">
-    <div class="modal-box">
-      <div class="modal-title">🗑️ ลบการ์ด</div>
-      <p id="modal-delete-card-desc" style="margin-bottom:16px;color:var(--muted);font-size:.9rem;"></p>
-      <div class="row">
-        <button class="btn btn-red w-full" onclick="confirmDeleteCard()">🗑️ ลบถาวร</button>
-        <button class="btn btn-ghost w-full" onclick="closeModal('modal-delete-card')">ยกเลิก</button>
-      </div>
+<!-- Approve Redeem -->
+<div class="modal-overlay" id="modal-approve-redeem">
+  <div class="bg-game-card border border-game-border rounded-2xl p-6 w-full max-w-md mx-4">
+    <h3 class="text-lg font-bold text-white mb-4">🃏 อนุมัติรหัสการ์ด</h3>
+    <div id="modal-approve-redeem-content" class="mb-5"></div>
+    <div class="flex gap-3 mb-3">
+      <button onclick="confirmApproveRedeem(true)"
+              class="flex-1 py-2.5 rounded-xl font-bold text-sm bg-accent-green/20 text-accent-green border border-accent-green/40 hover:bg-accent-green hover:text-game-bg transition-all">✅ อนุมัติ</button>
+      <button onclick="confirmApproveRedeem(false)"
+              class="flex-1 py-2.5 rounded-xl font-bold text-sm bg-accent-red/20 text-accent-red border border-accent-red/40 hover:bg-accent-red hover:text-white transition-all">❌ ปฏิเสธ</button>
+    </div>
+    <button onclick="closeModal('modal-approve-redeem')"
+            class="w-full py-2 rounded-xl text-sm font-semibold bg-game-surface border border-game-border text-game-muted hover:text-white transition-all">ยกเลิก</button>
+  </div>
+</div>
+
+<!-- Delete Card -->
+<div class="modal-overlay" id="modal-delete-card">
+  <div class="bg-game-card border border-game-border rounded-2xl p-6 w-full max-w-sm mx-4">
+    <h3 class="text-lg font-bold text-white mb-3">🗑️ ลบการ์ด</h3>
+    <p id="modal-delete-card-desc" class="text-sm text-game-muted mb-5"></p>
+    <div class="flex gap-3">
+      <button onclick="confirmDeleteCard()"
+              class="flex-1 py-2.5 rounded-xl font-bold text-sm bg-accent-red/20 text-accent-red border border-accent-red/40 hover:bg-accent-red hover:text-white transition-all">🗑️ ลบถาวร</button>
+      <button onclick="closeModal('modal-delete-card')"
+              class="flex-1 py-2.5 rounded-xl font-bold text-sm bg-game-surface border border-game-border text-game-muted hover:text-white transition-all">ยกเลิก</button>
     </div>
   </div>
+</div>
 
-  <div class="modal-overlay" id="modal-finish-comp">
-    <div class="modal-box">
-      <div class="modal-title">🏆 จบการแข่งขัน</div>
-      <div id="modal-finish-comp-content" style="margin-bottom:16px;"></div>
-      <div class="row">
-        <button class="btn btn-gold w-full" onclick="confirmFinishComp()">✅ จบการแข่งขัน</button>
-        <button class="btn btn-ghost w-full" onclick="closeModal('modal-finish-comp')">ยกเลิก</button>
-      </div>
+<!-- Finish Competition -->
+<div class="modal-overlay" id="modal-finish-comp">
+  <div class="bg-game-card border border-game-border rounded-2xl p-6 w-full max-w-md mx-4">
+    <h3 class="text-lg font-bold text-white mb-4">🏆 จบการแข่งขัน</h3>
+    <div id="modal-finish-comp-content" class="mb-5"></div>
+    <div class="flex gap-3">
+      <button onclick="confirmFinishComp()"
+              class="flex-1 py-2.5 rounded-xl font-bold text-sm bg-gradient-to-r from-accent-gold to-accent-orange text-game-bg hover:shadow-glow-gold transition-all">✅ จบการแข่งขัน</button>
+      <button onclick="closeModal('modal-finish-comp')"
+              class="flex-1 py-2.5 rounded-xl font-bold text-sm bg-game-surface border border-game-border text-game-muted hover:text-white transition-all">ยกเลิก</button>
     </div>
   </div>
+</div>
 
-  <div id="toast"></div>
-  <button id="theme-toggle" onclick="toggleTheme()" title="Toggle Dark/Light Mode">🌓</button>
-  <script type="module" src="js/main.js"></script>
+<!-- ✨ NEW: Assign Card to Guild -->
+<div class="modal-overlay" id="modal-assign-card">
+  <div class="bg-game-card border border-game-border rounded-2xl p-6 w-full max-w-sm mx-4
+              shadow-[0_0_40px_rgba(240,165,0,0.1)]">
+    <!-- Header -->
+    <div class="flex items-center gap-3 mb-5">
+      <div class="w-10 h-10 rounded-xl bg-accent-gold/20 border border-accent-gold/30
+                  flex items-center justify-center text-xl">🎁</div>
+      <div>
+        <h3 id="modal-assign-card-title" class="font-bold text-white text-base leading-tight">มอบการ์ดให้กิลด์</h3>
+        <p class="text-xs text-game-muted mt-0.5">Admin เท่านั้นที่มอบได้</p>
+      </div>
+    </div>
+
+    <!-- Guild Select -->
+    <div class="space-y-1.5 mb-4">
+      <label class="text-xs font-bold text-game-muted uppercase tracking-wider">เลือกกิลด์ที่จะมอบให้</label>
+      <select id="assign-card-guild-sel"
+              class="w-full bg-game-surface border border-game-border rounded-xl
+                     px-3 py-2.5 text-sm text-white
+                     focus:border-accent-gold/50 focus:shadow-glow-gold transition-all">
+      </select>
+    </div>
+
+    <!-- Warning -->
+    <div class="flex items-start gap-2 bg-accent-amber/10 border border-accent-amber/25
+                rounded-xl px-4 py-3 text-xs text-accent-amber mb-5">
+      <span class="mt-0.5 shrink-0">⚠️</span>
+      <span>หัวกิลด์จะสามารถกดใช้การ์ดนี้ได้ทันทีหลังจากได้รับ</span>
+    </div>
+
+    <!-- Buttons -->
+    <div class="flex gap-3">
+      <button onclick="confirmAssignCard()"
+              class="flex-1 py-2.5 rounded-xl font-bold text-sm
+                     bg-gradient-to-r from-accent-green to-emerald-400 text-game-bg
+                     hover:shadow-glow-green hover:scale-[1.02] transition-all duration-200">
+        ✅ มอบการ์ด
+      </button>
+      <button onclick="closeModal('modal-assign-card')"
+              class="flex-1 py-2.5 rounded-xl font-bold text-sm
+                     bg-game-surface border border-game-border text-game-muted
+                     hover:text-white hover:border-game-muted transition-all">
+        ยกเลิก
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════ GLOBAL UI ═══════════════════════════ -->
+<div id="toast"></div>
+
+<!-- Tab style -->
+<style>
+  .tab-btn {
+    flex-shrink: 0;
+    padding: 7px 14px;
+    border-radius: 10px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: #4a5578;
+    border: 1px solid transparent;
+    transition: all 0.2s ease;
+    cursor: pointer;
+    white-space: nowrap;
+    background: transparent;
+  }
+  .tab-btn:hover:not(.active) {
+    color: #c8d0e8;
+    background: rgba(255,255,255,0.04);
+    border-color: #1e2740;
+  }
+
+  /* Badge styles for JS-generated content */
+  .badge { display: inline-flex; align-items: center; gap: 4px; border-radius: 8px; padding: 3px 9px; font-size: 0.72rem; font-weight: 700; }
+  .badge-unity   { background: rgba(3,105,161,0.2); color: #38bdf8; border: 1px solid rgba(56,189,248,0.3); }
+  .badge-roblox  { background: rgba(194,65,12,0.2); color: #fb923c; border: 1px solid rgba(251,146,60,0.3); }
+  .badge-webapp  { background: rgba(21,128,61,0.2); color: #4ade80; border: 1px solid rgba(74,222,128,0.3); }
+  .badge-leader  { background: rgba(240,165,0,0.15); color: #f0a500; border: 1px solid rgba(240,165,0,0.3); }
+  .badge-member  { background: rgba(56,189,248,0.1); color: #38bdf8; border: 1px solid rgba(56,189,248,0.2); }
+  .badge-pending  { background: rgba(245,158,11,0.15); color: #f59e0b; border: 1px solid rgba(245,158,11,0.3); }
+  .badge-approved { background: rgba(34,197,94,0.15); color: #22c55e; border: 1px solid rgba(34,197,94,0.3); }
+  .badge-rejected { background: rgba(239,35,60,0.15); color: #ef233c; border: 1px solid rgba(239,35,60,0.3); }
+
+  /* Level badge */
+  .level-badge { display:inline-flex; align-items:center; gap:4px; padding:3px 10px; border-radius:99px; font-size:.72rem; font-weight:700; border:1px solid rgba(255,255,255,0.1); background:rgba(255,255,255,0.05); color:#cbd5e1; }
+  .lv-1 { background:rgba(75,85,99,.3); color:#9ca3af; border-color:rgba(75,85,99,.4); }
+  .lv-2 { background:rgba(5,150,105,.2); color:#34d399; border-color:rgba(52,211,153,.3); }
+  .lv-3 { background:rgba(37,99,235,.2); color:#60a5fa; border-color:rgba(96,165,250,.3); }
+  .lv-4 { background:rgba(124,58,237,.2); color:#a78bfa; border-color:rgba(167,139,250,.3); }
+  .lv-5 { background:rgba(240,165,0,.2); color:#f0a500; border-color:rgba(240,165,0,.4); }
+
+  /* Log line */
+  .log-line { color: #4a5578; padding: 2px 0; border-bottom: 1px solid #1e2740; }
+  .log-line .ts  { color: #1e2740; margin-right: 8px; }
+  .log-line .act { color: #f0a500; margin-right: 4px; }
+
+  /* Prog bar (used by JS) */
+  .prog-wrap { height:5px; background:#1e2740; border-radius:99px; overflow:hidden; margin-top:6px; }
+  .prog-fill { height:100%; border-radius:99px; background:linear-gradient(90deg,#f0a500,#ff6b00); transition:width .6s ease; }
+
+  /* Misc JS-generated components */
+  .empty { color:#4a5578; text-align:center; padding:2rem; font-size:.9rem; }
+  .muted { color:#4a5578; }
+  .flex-gap { display:flex; flex-wrap:wrap; gap:6px; }
+  .mt-s { margin-top:8px; }
+
+  /* Submission img */
+  .submission-img { max-width:100%; max-height:200px; border-radius:10px; margin-top:10px; cursor:pointer; border:1px solid #1e2740; }
+
+  /* Redeem code */
+  .redeem-code { font-family:'Space Grotesk',monospace; letter-spacing:.1em; font-size:.9rem; font-weight:700; color:#f0a500; margin:4px 0; }
+
+  /* Admin guild item (JS-generated) */
+  .admin-guild-item { background:#0f1420; border:1px solid #1e2740; border-radius:16px; padding:18px; margin-bottom:14px; }
+  .admin-guild-header { display:flex; justify-content:space-between; align-items:flex-start; gap:12px; flex-wrap:wrap; }
+  .admin-guild-actions { display:flex; flex-wrap:wrap; gap:6px; }
+
+  /* Submission item */
+  .submission-item { background:#0f1420; border:1px solid #1e2740; border-radius:14px; padding:16px; margin-bottom:10px; }
+
+  /* Redeem request item */
+  .redeem-request-item { display:flex; align-items:center; gap:12px; flex-wrap:wrap; background:#0f1420; border:1px solid #1e2740; border-radius:12px; padding:14px; margin-bottom:8px; }
+
+  /* Card item (JS-generated) */
+  .card-item { background:#0f1420; border:1px solid #1e2740; border-radius:14px; padding:14px; text-align:center; }
+  .card-emoji { font-size:2.5rem; margin-bottom:8px; }
+  .card-name  { font-weight:700; font-size:.9rem; color:#fff; margin-bottom:4px; }
+  .card-effect { font-size:.75rem; color:#4a5578; margin-bottom:8px; }
+
+  /* Competition card */
+  .competition-card { background:#0f1420; border:1px solid #1e2740; border-radius:14px; padding:16px; margin-bottom:10px; }
+  .comp-title { font-weight:800; font-size:1rem; color:#fff; margin-bottom:10px; }
+  .comp-guild-row { display:flex; align-items:center; gap:10px; padding:8px 0; border-bottom:1px solid #1e2740; }
+  .comp-guild-name { flex:1; font-weight:600; font-size:.9rem; color:#c8d0e8; }
+  .comp-guild-score { font-weight:700; font-size:.9rem; color:#f0a500; }
+
+  /* Quest item */
+  .quest-item { display:flex; align-items:flex-start; gap:12px; background:#0f1420; border:1px solid #1e2740; border-radius:12px; padding:14px; margin-bottom:8px; }
+  .quest-icon { font-size:1.5rem; }
+  .quest-title { font-weight:700; font-size:.9rem; color:#fff; }
+  .quest-desc  { font-size:.8rem; color:#4a5578; margin:3px 0; }
+  .quest-xp    { font-size:.78rem; color:#f0a500; font-weight:600; }
+
+  /* Team item */
+  .team-item { background:#0f1420; border:1px solid #1e2740; border-left:3px solid #38bdf8; border-radius:12px; padding:14px; margin-bottom:8px; }
+  .team-header { font-weight:700; font-size:.95rem; color:#fff; }
+  .team-members-grid { display:flex; flex-wrap:wrap; gap:6px; margin-top:10px; }
+  .team-member-badge { background:#141925; border:1px solid #1e2740; border-radius:8px; padding:4px 10px; font-size:.78rem; color:#c8d0e8; }
+
+  /* Manage member row */
+  .manage-member-row { display:flex; align-items:center; gap:10px; padding:10px; background:#141925; border:1px solid #1e2740; border-radius:10px; margin-bottom:6px; }
+  .manage-member-avatar { width:34px; height:34px; border-radius:10px; display:flex; align-items:center; justify-content:center; font-weight:700; color:#fff; font-size:.9rem; flex-shrink:0; }
+  .manage-member-name { flex:1; font-weight:600; font-size:.9rem; color:#c8d0e8; }
+
+  /* Lb row */
+  .lb-row { display:flex; align-items:center; gap:12px; padding:12px; background:#0f1420; border:1px solid #1e2740; border-radius:12px; margin-bottom:4px; }
+  .lb-rank { font-size:1.2rem; font-weight:800; width:32px; text-align:center; flex-shrink:0; }
+  .lb-name { font-weight:700; font-size:.95rem; color:#fff; }
+  .lb-xp   { font-size:.8rem; color:#f0a500; font-weight:600; text-align:right; }
+  .current-guild { border-color:rgba(255,107,0,.4); background:#1a1512; }
+
+  /* Buttons (for JS-generated HTML) */
+  .btn { display:inline-flex; align-items:center; justify-content:center; border-radius:10px; font-weight:700; font-size:.82rem; padding:7px 14px; cursor:pointer; transition:all .2s ease; border:1px solid transparent; }
+  .btn-sm { padding:5px 11px; font-size:.76rem; border-radius:8px; }
+  .btn-full, .btn.w-full, .w-full { width:100%; }
+  .btn-gold   { background:linear-gradient(135deg,#f0a500,#ff6b00); color:#08090f; }
+  .btn-gold:hover { box-shadow:0 0 20px rgba(240,165,0,.3); }
+  .btn-green  { background:rgba(34,197,94,.15); color:#22c55e; border-color:rgba(34,197,94,.3); }
+  .btn-green:hover { background:#22c55e; color:#08090f; }
+  .btn-red    { background:rgba(239,35,60,.15); color:#ef233c; border-color:rgba(239,35,60,.3); }
+  .btn-red:hover { background:#ef233c; color:#fff; }
+  .btn-accent { background:rgba(56,189,248,.15); color:#38bdf8; border-color:rgba(56,189,248,.3); }
+  .btn-accent:hover { background:#38bdf8; color:#08090f; }
+  .btn-purple { background:linear-gradient(135deg,#a855f7,#38bdf8); color:#fff; }
+  .btn-purple:hover { opacity:.9; }
+  .btn-ghost  { background:rgba(255,255,255,.04); color:#4a5578; border-color:#1e2740; }
+  .btn-ghost:hover { color:#c8d0e8; border-color:#4a5578; }
+  .btn-yellow { background:rgba(245,158,11,.15); color:#f59e0b; border-color:rgba(245,158,11,.3); }
+
+  /* Count chip */
+  .count-chip { display:inline-block; padding:2px 8px; border-radius:99px; font-size:.72rem; font-weight:700; }
+  .chip-ok  { background:rgba(34,197,94,.15); color:#22c55e; border:1px solid rgba(34,197,94,.3); }
+  .chip-max { background:rgba(239,35,60,.15); color:#ef233c; border:1px solid rgba(239,35,60,.3); }
+
+  /* Notice */
+  .notice { border-radius:12px; padding:10px 14px; font-size:.84rem; font-weight:500; }
+  .notice-info   { background:rgba(56,189,248,.08); border:1px solid rgba(56,189,248,.2); color:#38bdf8; }
+  .notice-warn   { background:rgba(245,158,11,.08); border:1px solid rgba(245,158,11,.2); color:#f59e0b; }
+  .notice-danger { background:rgba(239,35,60,.08); border:1px solid rgba(239,35,60,.2); color:#ef233c; }
+
+  /* Section title */
+  .section-title { font-size:.78rem; font-weight:700; color:#4a5578; text-transform:uppercase; letter-spacing:.07em; margin-bottom:10px; }
+
+  /* Grid helpers */
+  .grid-2 { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+  .grid-3 { display:grid; grid-template-columns:repeat(auto-fill,minmax(150px,1fr)); gap:12px; }
+  .form-group { margin-bottom:12px; }
+  .form-group label { display:block; font-size:.75rem; font-weight:700; color:#4a5578; text-transform:uppercase; letter-spacing:.06em; margin-bottom:6px; }
+  .form-group input, .form-group select, .form-group textarea {
+    width:100%; background:#141925; border:1px solid #1e2740; border-radius:10px;
+    padding:10px 12px; font-size:.875rem; color:#fff; font-family:'Kanit',sans-serif;
+  }
+  .row { display:flex; gap:10px; }
+  .row.mt { margin-top:16px; }
+  .mt { margin-top:12px; }
+
+  /* Theme toggle */
+  #theme-toggle {
+    position:fixed; bottom:20px; right:20px; z-index:999;
+    width:44px; height:44px; border-radius:12px;
+    background:#141925; border:1px solid #1e2740;
+    font-size:1.2rem; cursor:pointer; display:flex;
+    align-items:center; justify-content:center;
+    transition:all .2s ease;
+  }
+  #theme-toggle:hover { border-color:#f0a500; box-shadow:0 0 15px rgba(240,165,0,.2); }
+</style>
+
+<button id="theme-toggle" onclick="toggleTheme()" title="Toggle Dark/Light Mode">🌓</button>
+<script type="module" src="js/main.js"></script>
 </body>
 </html>
