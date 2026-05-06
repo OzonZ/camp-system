@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Guild Camp System - Admin Panel</title>
+  
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <style>
+    :root {
+      --bg: #0b0f19; --surface: #151b2b; --card: #151b2b; --raised: #1e2638;
+      --border: #232b3e; --border2: #334155; --text: #f8fafc; --muted: #94a3b8;
+      --brand-red: #ff2a2a; --brand-orange: #ff6b00; --brand-yellow: #ffc107;
+      --blue: #38bdf8; --blue2: #0284c7; --cyan: #22d3ee; --green: #4ade80;
+      --amber: #fbbf24; --gold: #ff6b00; --red: #ff2a2a; --purple: #c084fc;
+      --lv1: #94a3b8; --lv2: #4ade80; --lv3: #38bdf8; --lv4: #c084fc; --lv5: #fbbf24; --lv6: #ff2a2a;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+
+    /* พื้นหลังตารางเรืองแสง */
+    body {
+      font-family: 'Kanit', sans-serif;
+      background-color: #0b0f19;
+      background-image: linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+      background-size: 50px 50px; background-position: center center;
+      color: var(--text); min-height: 100vh; font-size: 15px; line-height: 1.6;
+    }
+
+    .mouse-glow {
+      position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; pointer-events: none; z-index: 0;
+      background: radial-gradient(600px circle at var(--mouse-x, 50vw) var(--mouse-y, 50vh), rgba(255, 107, 0, 0.12), transparent 40%);
+      transition: background 0.1s ease;
+    }
+
+    #app { position: relative; z-index: 1; max-width: 1000px; margin: 0 auto; padding: 20px 16px 60px; }
+    .screen { display: none; animation: fadeUp .3s ease forwards; }
+    .screen.active { display: block; }
+    @keyframes fadeUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+    .top-nav { display: flex; align-items: center; justify-content: space-between; background: rgba(21, 27, 43, 0.9); backdrop-filter: blur(12px); border: 1px solid var(--border); border-radius: 12px; padding: 12px 20px; margin-bottom: 24px; position: sticky; top: 12px; z-index: 50; gap: 12px; }
+    .nav-brand { font-size: 1.25rem; font-weight: 700; color: var(--text); display: flex; align-items: center; }
+    .nav-user { font-size: 0.85rem; color: var(--brand-orange); font-weight: 600; margin-right: 8px; }
+    .nav-right { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; justify-content: flex-end; }
+
+    .tab-bar { display: flex; gap: 6px; margin-bottom: 24px; flex-wrap: wrap; background: var(--card); padding: 6px; border-radius: 10px; border: 1px solid var(--border); }
+    .tab-btn { padding: 8px 16px; border-radius: 8px; border: 1px solid transparent; background: transparent; color: var(--muted); cursor: pointer; font-family: 'Kanit', sans-serif; font-size: 0.85rem; font-weight: 500; transition: background-color .2s, color .2s; white-space: nowrap; }
+    .tab-btn:hover { color: var(--text); background: var(--raised); }
+    .tab-btn.active { background: var(--surface); color: var(--brand-orange); border-color: var(--border); }
+    .tab-content { display: none; }
+    .tab-content.active { display: block; animation: fadeUp .2s ease forwards; }
+
+    .card { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 24px; margin-bottom: 24px; }
+    .card-title { font-size: 0.9rem; font-weight: 600; color: var(--brand-orange); letter-spacing: .02em; margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
+
+    input, select, textarea { background: rgba(30, 38, 56, 0.4); border: 1px solid var(--border); border-radius: 8px; color: var(--text); font-family: 'Kanit', sans-serif; font-size: 0.95rem; padding: 10px 14px; width: 100%; outline: none; transition: border-color .2s; }
+    input:focus, select:focus, textarea:focus { border-color: var(--brand-orange); background: var(--bg); }
+    select option { background: var(--surface); }
+    label { display: block; font-size: 0.85rem; color: var(--muted); margin-bottom: 6px; font-weight: 500; }
+    .form-group { margin-bottom: 16px; }
+
+    .btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; border: none; border-radius: 8px; cursor: pointer; font-family: 'Kanit', sans-serif; font-size: 0.9rem; font-weight: 600; padding: 10px 16px; transition: filter .2s; white-space: nowrap; }
+    .btn:hover { filter: brightness(1.15); }
+    .btn:active { filter: brightness(0.9); }
+    .btn-gold { background: linear-gradient(to right, var(--brand-red), var(--brand-orange)); color: #fff; }
+    .btn-red { background: var(--red); color: #fff; }
+    .btn-ghost { background: rgba(255,255,255,0.05); border: 1px solid var(--border); color: var(--text); }
+    .btn-ghost:hover { background: rgba(255,255,255,0.1); }
+    .btn-accent { background: var(--blue2); color: #fff; }
+    .btn-green { background: var(--green); color: #111827; }
+    .btn-purple { background: var(--purple); color: #111827; }
+    .btn-sm { padding: 6px 12px; font-size: 0.8rem; border-radius: 6px; }
+    .btn-full { width: 100%; margin-top: 10px; }
+
+    .badge { display: inline-flex; align-items: center; gap: 6px; border-radius: 6px; padding: 4px 8px; font-size: 0.75rem; font-weight: 600; }
+    .badge-unity { background: rgba(3, 105, 161, 0.2); color: #38bdf8; border: 1px solid rgba(56, 189, 248, 0.3); }
+    .badge-roblox { background: rgba(194, 65, 12, 0.2); color: #fb923c; border: 1px solid rgba(251, 146, 60, 0.3); }
+    .badge-webapp { background: rgba(21, 128, 61, 0.2); color: #4ade80; border: 1px solid rgba(74, 222, 128, 0.3); }
+    .badge-leader { background: rgba(255, 107, 0, 0.1); color: var(--brand-orange); border: 1px solid rgba(255, 107, 0, 0.3); }
+    .badge-member { background: rgba(255, 255, 255, 0.05); color: var(--text); border: 1px solid var(--border); }
+    .badge-pending { background: rgba(251, 191, 36, 0.15); color: var(--amber); border: 1px solid rgba(251, 191, 36, 0.3); }
+    .badge-approved { background: rgba(74, 222, 128, 0.15); color: var(--green); border: 1px solid rgba(74, 222, 128, 0.3); }
+    .badge-rejected { background: rgba(255, 42, 42, 0.15); color: var(--red); border: 1px solid rgba(255, 42, 42, 0.3); }
+
+    .prog-wrap { background: var(--bg); border-radius: 99px; height: 6px; overflow: hidden; margin: 8px 0; border: 1px solid var(--border); }
+    .prog-fill { height: 100%; border-radius: 99px; transition: width .8s ease; }
+    .prog-lv { background: linear-gradient(90deg, var(--brand-orange), var(--brand-yellow)); }
+
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    .grid-3 { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 16px; }
+    @media(max-width:600px) { .grid-2, .grid-3 { grid-template-columns: 1fr; } }
+
+    .admin-guild-item, .team-item, .quest-item, .submission-item {
+      background: var(--raised); border: 1px solid var(--border); border-radius: 12px; padding: 16px; margin-bottom: 16px; transition: border-color .2s;
+    }
+    .admin-guild-item:hover, .team-item:hover { border-color: var(--brand-orange); }
+    .manage-member-row, .redeem-request-item { background: var(--bg); border: 1px solid var(--border); border-radius: 8px; padding: 12px; display: flex; align-items: center; gap: 12px; margin-bottom: 8px; }
+    .manage-member-avatar { width: 36px; height: 36px; border-radius: 8px; background: var(--border2); display: flex; align-items: center; justify-content: center; font-weight: 600; color: #fff; }
+    
+    .notice { border-radius: 8px; padding: 12px 16px; font-size: 0.85rem; margin-bottom: 16px; border: 1px solid transparent; }
+    .notice-info { background: rgba(34, 211, 238, 0.1); border-color: rgba(34, 211, 238, 0.3); color: var(--cyan); }
+    .notice-warn { background: rgba(251, 191, 36, 0.1); border-color: rgba(251, 191, 36, 0.3); color: var(--amber); }
+    .notice-danger { background: rgba(255, 42, 42, 0.1); border-color: rgba(255, 42, 42, 0.3); color: var(--red); }
+
+    .modal-overlay { position: fixed; inset: 0; background: rgba(0, 0, 0, 0.85); display: none; align-items: center; justify-content: center; z-index: 100; }
+    .modal-overlay.open { display: flex; }
+    .modal-box { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 24px; max-width: 480px; width: 92%; animation: fadeUp .2s; max-height: 90vh; overflow-y: auto; }
+    .modal-title { color: var(--text); margin-bottom: 20px; font-size: 1.1rem; font-weight: 600; display: flex; align-items: center; gap: 8px;}
+
+    #console-log { background: #000; border: 1px solid #333; border-radius: 8px; padding: 16px; height: 300px; overflow-y: auto; font-family: monospace; font-size: 0.8rem; color: #4ade80; }
+    .log-line { border-bottom: 1px dashed #222; padding: 6px 0; }
+    .log-line .ts { color: #888; }
+    
+    .muted { color: var(--muted); font-size: 0.85rem; }
+    .empty { text-align: center; padding: 30px; color: var(--muted); font-size: 0.9rem; background: var(--bg); border-radius: 12px; border: 1px solid var(--border); }
+    .flex-gap { display: flex; gap: 8px; flex-wrap: wrap; }
+    .row { display: flex; gap: 12px; align-items: center; margin-top: 16px; }
+
+    #toast {
+      position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%) translateY(100px);
+      padding: 12px 24px; border-radius: 12px; font-weight: 600; box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+      transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1); z-index: 999; pointer-events: none;
+      background: #151b2b; color: #f8fafc; border: 1px solid #232b3e;
+    }
+    #toast.show { transform: translateX(-50%) translateY(0); }
+  </style>
+</head>
+<body class="relative overflow-x-hidden">
+  
+  <div class="mouse-glow" id="mouse-glow"></div>
+
+  <div id="app">
+    <div id="screen-admin" class="screen active">
+      <div class="top-nav">
+        <div class="nav-brand">
+          <img src="image/logo.png" alt="Logo" style="height: 44px; margin-right: 12px; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.3));" /> 
+          Admin Panel 
+          <span style="font-size: 0.8rem; color: var(--muted); margin-left: 8px; font-weight: 400; align-self: flex-end; margin-bottom: 4px;">Control Center</span>
+        </div>
+        <div class="nav-right">
+          <span class="nav-user" id="admin-nav-user"></span>
+          <button class="btn btn-ghost btn-sm" onclick="logout()"><i class="fa-solid fa-arrow-right-from-bracket"></i> ออกระบบ</button>
+        </div>
+      </div>
+      
+      <div class="tab-bar">
+        <button class="tab-btn active" onclick="showTab('a-tab-guilds','admin')"><i class="fa-solid fa-chess-rook"></i> กิลด์</button>
+        <button class="tab-btn" onclick="showTab('a-tab-teams','admin')"><i class="fa-solid fa-users-viewfinder"></i> กลุ่ม</button>
+        <button class="tab-btn" onclick="showTab('a-tab-quests','admin')"><i class="fa-solid fa-scroll"></i> เควส</button>
+        <button class="tab-btn" onclick="showTab('a-tab-submissions','admin')"><i class="fa-solid fa-inbox"></i> ตรวจงาน</button>
+        <button class="tab-btn" onclick="showTab('a-tab-cards','admin')"><i class="fa-solid fa-box-open"></i> การ์ด</button>
+        <button class="tab-btn" onclick="showTab('a-tab-comp','admin')"><i class="fa-solid fa-flag-checkered"></i> แข่งขัน</button>
+        <button class="tab-btn" onclick="showTab('a-tab-log','admin')"><i class="fa-solid fa-terminal"></i> Log</button>
+        <button class="tab-btn" onclick="showTab('a-tab-lb','admin')"><i class="fa-solid fa-trophy"></i> อันดับ</button>
+      </div>
+
+      <!-- GUILDS TAB -->
+      <div id="a-tab-guilds" class="tab-content active"><div id="admin-guilds-list"></div></div>
+      
+      <!-- TEAMS TAB -->
+      <div id="a-tab-teams" class="tab-content">
+        <div class="card">
+          <div class="card-title"><i class="fa-solid fa-folder-plus"></i> สร้างกลุ่ม (Admin)</div>
+          <div class="grid-2">
+            <div class="form-group"><label>เลือกกิลด์</label><select id="admin-team-guild-sel" onchange="loadAdminAllTeams()"></select></div>
+            <div class="form-group"><label>ชื่อกลุ่ม</label><input id="new-team-name" placeholder="ชื่อกลุ่ม…" /></div>
+          </div>
+          <div class="form-group">
+            <label>ประเภทโปรเจกต์</label>
+            <select id="admin-team-type" style="font-family: 'Kanit', 'Font Awesome 6 Free'; font-weight: 900;">
+              <option value="Unity">&#xf1b2; Unity</option>
+              <option value="Roblox">&#xf11b; Roblox</option>
+              <option value="WebApp">&#xf0ac; WebApp</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>สมาชิก <span id="admin-team-count-chip" class="count-chip badge badge-approved">0/3</span></label>
+            <div id="team-members-builder" class="flex-gap" style="margin-bottom:8px;min-height:24px;"></div>
+            <div style="display:flex;gap:8px;">
+              <input id="team-member-input" placeholder="ชื่อสมาชิก…" style="flex:1" onkeydown="if(event.key==='Enter')addTeamMemberInput()" />
+              <button class="btn btn-ghost btn-sm" onclick="addTeamMemberInput()"><i class="fa-solid fa-plus"></i> เพิ่ม</button>
+            </div>
+          </div>
+          <button class="btn btn-gold btn-full" onclick="adminCreateTeam()"><i class="fa-solid fa-check"></i> สร้างกลุ่ม</button>
+        </div>
+        <div class="card"><div class="card-title"><i class="fa-solid fa-sitemap"></i> กลุ่มทั้งหมด</div><div id="admin-teams-list" class="grid-2"></div></div>
+      </div>
+
+      <!-- QUESTS TAB -->
+      <div id="a-tab-quests" class="tab-content">
+        <div class="card">
+          <div class="card-title"><i class="fa-solid fa-scroll"></i> สร้างเควสใหม่</div>
+          <div class="notice notice-info"><i class="fa-solid fa-circle-info"></i> ทุกกลุ่มในกิลด์ต้องส่งงานครบถึงผ่านได้</div>
+          <div class="form-group"><label>ชื่อเควส</label><input id="q-title" placeholder="ชื่อเควส…" /></div>
+          <div class="form-group"><label>คำอธิบาย</label><textarea id="q-desc" placeholder="รายละเอียด…"></textarea></div>
+          <div class="grid-2">
+            <div class="form-group"><label>XP รางวัล</label><input id="q-pts" type="number" value="50" min="0" /></div>
+            <div class="form-group"><label>ไอคอน (ใส่โค้ด FontAwesome)</label><input id="q-icon" value='<i class="fa-solid fa-fire"></i>' /></div>
+          </div>
+          <div class="form-group">
+            <label>มอบให้กิลด์ (เว้นว่างคือให้ทุกกิลด์)</label>
+            <select id="q-guild"><option value="">— ทุกกิลด์ —</option></select>
+          </div>
+          <button class="btn btn-gold btn-full" onclick="adminCreateQuest()"><i class="fa-solid fa-check"></i> สร้างเควส</button>
+        </div>
+        <div class="card"><div class="card-title"><i class="fa-solid fa-list-check"></i> เควสทั้งหมด</div><div id="admin-quest-list"></div></div>
+      </div>
+
+      <!-- SUBMISSIONS TAB -->
+      <div id="a-tab-submissions" class="tab-content">
+        <div class="card">
+          <div class="card-title"><i class="fa-solid fa-inbox"></i> งานที่รอตรวจ <span id="pending-count" class="badge badge-pending ml-2"></span></div>
+          <div id="admin-submissions"></div>
+        </div>
+      </div>
+
+      <!-- CARDS TAB -->
+      <div id="a-tab-cards" class="tab-content">
+        <div class="card">
+          <div class="card-title text-brand-yellow"><i class="fa-solid fa-key"></i> คำขอกรอกรหัสการ์ด <span id="redeem-pending-count" class="badge badge-pending ml-2"></span></div>
+          <div id="admin-redeem-requests"></div>
+        </div>
+        <div class="card">
+          <div class="card-title"><i class="fa-solid fa-layer-group"></i> สร้างการ์ดเทมเพลต</div>
+          <div class="grid-2">
+            <div class="form-group"><label>ไอคอน (ใส่โค้ด FontAwesome)</label><input id="card-icon-input" value='<i class="fa-solid fa-clone"></i>' /></div>
+            <div class="form-group"><label>ชื่อการ์ด</label><input id="card-name-input" placeholder="ชื่อการ์ด…" /></div>
+          </div>
+          <div class="form-group"><label>ผลการ์ด</label><input id="card-effect-input" placeholder="ผลของการ์ด…" /></div>
+          <div class="form-group"><label>รหัสการ์ด (unique)</label><input id="card-code-input" placeholder="CAMP-XXXX…" style="text-transform:uppercase;" /></div>
+          <div class="form-group">
+            <label>รูปภาพ (PNG/JPG สูงสุด 3MB, ไม่บังคับ)</label>
+            <input id="card-image-input" type="file" accept="image/png,image/jpeg" style="padding: 8px;" />
+            <div id="card-image-preview-wrap" style="display:none;margin-top:8px;"><img id="card-image-preview" style="max-width:100%;max-height:160px;border-radius:8px;border:1px solid var(--border);" /></div>
+          </div>
+          <button class="btn btn-gold btn-full" onclick="adminCreateCard()"><i class="fa-solid fa-check"></i> สร้างการ์ด</button>
+        </div>
+        <div class="card"><div class="card-title"><i class="fa-solid fa-boxes-stacked"></i> การ์ดในระบบ</div><div id="admin-all-cards" class="grid-3"></div></div>
+      </div>
+
+      <!-- COMPETITION TAB -->
+      <div id="a-tab-comp" class="tab-content">
+        <div class="card">
+          <div class="card-title"><i class="fa-solid fa-flag-checkered"></i> สร้างการแข่งขัน</div>
+          <div class="form-group"><label>ชื่อการแข่งขัน</label><input id="comp-name" placeholder="ชื่อการแข่งขัน…" /></div>
+          <button class="btn btn-gold btn-full" onclick="adminCreateCompetition()"><i class="fa-solid fa-check"></i> สร้างการแข่งขัน</button>
+        </div>
+        <div class="card"><div class="card-title"><i class="fa-solid fa-trophy"></i> การแข่งขันทั้งหมด</div><div id="admin-comp-list"></div></div>
+      </div>
+
+      <!-- LOG TAB -->
+      <div id="a-tab-log" class="tab-content">
+        <div class="card">
+          <div class="card-title"><i class="fa-solid fa-terminal"></i> System Activity Log</div>
+          <div id="console-log"></div>
+          <button class="btn btn-ghost btn-sm mt-4" onclick="loadAdminLog()"><i class="fa-solid fa-rotate-right"></i> รีเฟรชข้อมูล</button>
+        </div>
+      </div>
+
+      <!-- LEADERBOARD TAB -->
+      <div id="a-tab-lb" class="tab-content">
+        <div class="card"><div class="card-title"><i class="fa-solid fa-ranking-star"></i> Leaderboard</div><div id="admin-lb"></div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODALS สำหรับ ADMIN -->
+  <div class="modal-overlay" id="modal-view-img" onclick="closeModal('modal-view-img')">
+    <div style="max-width:90vw;max-height:90vh;"><img id="modal-big-img" style="max-width:100%;max-height:85vh;border-radius:12px;" alt="" /></div>
+  </div>
+
+  <div class="modal-overlay" id="modal-edit-guild">
+    <div class="modal-box">
+      <div class="modal-title"><i class="fa-solid fa-pen-to-square text-brand-orange"></i> แก้ไขกิลด์</div>
+      <input type="hidden" id="edit-guild-id" />
+      <div class="form-group"><label>ชื่อกิลด์</label><input id="edit-guild-name" /></div>
+      <div class="form-group"><label>คำอธิบาย</label><textarea id="edit-guild-desc" style="min-height:80px;"></textarea></div>
+      <div class="form-group"><label>XP ปัจจุบัน</label><input id="edit-guild-xp" type="number" min="0" /></div>
+      <div class="row">
+        <button class="btn btn-gold w-full" onclick="confirmEditGuild()"><i class="fa-solid fa-floppy-disk"></i> บันทึก</button>
+        <button class="btn btn-ghost w-full" onclick="closeModal('modal-edit-guild')">ยกเลิก</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="modal-delete-guild">
+    <div class="modal-box">
+      <div class="modal-title text-brand-red"><i class="fa-solid fa-triangle-exclamation"></i> ลบกิลด์</div>
+      <p id="modal-delete-guild-desc" style="margin-bottom:10px;"></p>
+      <div class="notice notice-danger"><i class="fa-solid fa-circle-exclamation"></i> ข้อมูลสมาชิกและการ์ดทั้งหมดจะหายไปถาวร</div>
+      <div class="form-group"><label>พิมพ์ชื่อกิลด์เพื่อยืนยัน</label><input id="delete-guild-confirm-input" /></div>
+      <div class="row">
+        <button class="btn btn-red w-full" onclick="confirmDeleteGuild()"><i class="fa-solid fa-trash"></i> ลบถาวร</button>
+        <button class="btn btn-ghost w-full" onclick="closeModal('modal-delete-guild')">ยกเลิก</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="modal-manage-members">
+    <div class="modal-box" style="max-width:540px;">
+      <div class="modal-title"><i class="fa-solid fa-users text-brand-orange"></i> สมาชิก — <span id="modal-members-guild-name" class="text-white ml-2"></span></div>
+      <div style="background:var(--bg);border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:20px;">
+        <div class="section-title text-blue-400"><i class="fa-solid fa-user-plus"></i> เพิ่มสมาชิก</div>
+        <div class="grid-2">
+          <input id="add-member-name" placeholder="ชื่อสมาชิก…" />
+          <select id="add-member-role">
+            <option value="member">สมาชิก</option>
+            <option value="leader">หัวกิลด์</option>
+          </select>
+        </div>
+        <button class="btn btn-ghost btn-sm btn-full mt-2" onclick="adminAddMember()"><i class="fa-solid fa-check"></i> เพิ่มเลย</button>
+      </div>
+      <div class="section-title">รายชื่อสมาชิกปัจจุบัน <span id="modal-member-count" class="badge badge-member"></span></div>
+      <div id="modal-members-list"></div>
+      <button class="btn btn-ghost btn-full mt-4" onclick="closeModal('modal-manage-members')">ปิดหน้าต่าง</button>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="modal-edit-member">
+    <div class="modal-box" style="max-width:360px;">
+      <div class="modal-title"><i class="fa-solid fa-user-pen text-brand-orange"></i> แก้ไขบทบาท</div>
+      <input type="hidden" id="edit-member-id" />
+      <div class="form-group"><label>ชื่อ</label><input id="edit-member-name" /></div>
+      <div class="form-group"><label>บทบาท</label>
+        <select id="edit-member-role">
+          <option value="member">สมาชิก</option>
+          <option value="leader">หัวกิลด์</option>
+        </select>
+      </div>
+      <div class="row">
+        <button class="btn btn-gold w-full" onclick="confirmEditMember()"><i class="fa-solid fa-floppy-disk"></i> บันทึก</button>
+        <button class="btn btn-ghost w-full" onclick="closeModal('modal-edit-member')">ยกเลิก</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="modal-approve-redeem">
+    <div class="modal-box">
+      <div class="modal-title text-brand-yellow"><i class="fa-solid fa-key"></i> อนุมัติรหัสการ์ด</div>
+      <div id="modal-approve-redeem-content" style="margin-bottom:20px; font-size: 1rem;"></div>
+      <div class="row">
+        <button class="btn btn-green w-full" onclick="confirmApproveRedeem(true)"><i class="fa-solid fa-check"></i> อนุมัติ</button>
+        <button class="btn btn-red w-full" onclick="confirmApproveRedeem(false)"><i class="fa-solid fa-xmark"></i> ปฏิเสธ</button>
+      </div>
+      <button class="btn btn-ghost btn-full mt-4" onclick="closeModal('modal-approve-redeem')">ยกเลิก</button>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="modal-delete-card">
+    <div class="modal-box">
+      <div class="modal-title text-brand-red"><i class="fa-solid fa-trash"></i> ลบการ์ด</div>
+      <p id="modal-delete-card-desc" style="margin-bottom:20px;"></p>
+      <div class="row">
+        <button class="btn btn-red w-full" onclick="confirmDeleteCard()"><i class="fa-solid fa-trash"></i> ลบถาวร</button>
+        <button class="btn btn-ghost w-full" onclick="closeModal('modal-delete-card')">ยกเลิก</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="modal-finish-comp">
+    <div class="modal-box">
+      <div class="modal-title text-brand-yellow"><i class="fa-solid fa-trophy"></i> จบการแข่งขัน</div>
+      <div id="modal-finish-comp-content" style="margin-bottom:20px;"></div>
+      <div class="row">
+        <button class="btn btn-gold w-full" onclick="confirmFinishComp()"><i class="fa-solid fa-check"></i> ยืนยันจบ</button>
+        <button class="btn btn-ghost w-full" onclick="closeModal('modal-finish-comp')">ยกเลิก</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ✨ NEW: Assign Card to Guild -->
+  <div class="modal-overlay" id="modal-assign-card">
+    <div class="modal-box">
+      <div class="modal-title text-brand-orange"><i class="fa-solid fa-gift"></i> มอบการ์ดให้กิลด์</div>
+      <p class="text-xs text-game-muted mb-4">Admin เท่านั้นที่มอบได้</p>
+      
+      <div class="form-group">
+        <label>เลือกกิลด์ที่จะมอบให้</label>
+        <select id="assign-card-guild-sel"></select>
+      </div>
+
+      <div class="notice notice-warn">
+        <i class="fa-solid fa-triangle-exclamation"></i> หัวกิลด์จะสามารถกดใช้การ์ดนี้ได้ทันทีหลังจากได้รับ
+      </div>
+
+      <div class="row">
+        <button class="btn btn-green w-full" onclick="confirmAssignCard()"><i class="fa-solid fa-check"></i> มอบการ์ด</button>
+        <button class="btn btn-ghost w-full" onclick="closeModal('modal-assign-card')">ยกเลิก</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="toast"></div>
+  <button id="theme-toggle" class="hidden"></button>
+  
+  <script>
+    document.addEventListener('mousemove', (e) => {
+      const glow = document.getElementById('mouse-glow');
+      if (glow) {
+        glow.style.setProperty('--mouse-x', `${e.clientX}px`);
+        glow.style.setProperty('--mouse-y', `${e.clientY}px`);
+      }
+    });
+  </script>
+  
+  <script type="module" src="js/main.js"></script>
+</body>
+</html>
