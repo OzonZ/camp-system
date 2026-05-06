@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>⚔️ Guild Camp System - Admin</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+
+  </style>
+</head>
+<body>
+  <div id="app">
+    <div id="screen-admin" class="screen active">
+      <div class="top-nav">
+        <div class="nav-brand">🐹 Admin Panel · <span style="color:var(--muted);font-weight:400;font-size:.8rem;">Control Center</span></div>
+        <div class="nav-right">
+          <span class="nav-user" id="admin-nav-user">Admin</span>
+          <button class="btn btn-red btn-sm" onclick="logout()">ออกจากระบบ</button>
+        </div>
+      </div>
+      <div class="tab-bar">
+        <button class="tab-btn active" onclick="showTab('a-tab-guilds','admin')">🏰 กิลด์</button>
+        <button class="tab-btn" onclick="showTab('a-tab-teams','admin')">👥 กลุ่ม</button>
+        <button class="tab-btn" onclick="showTab('a-tab-quests','admin')">📜 เควส</button>
+        <button class="tab-btn" onclick="showTab('a-tab-submissions','admin')">📬 ส่งงาน</button>
+        <button class="tab-btn" onclick="showTab('a-tab-cards','admin')">🃏 การ์ด</button>
+        <button class="tab-btn" onclick="showTab('a-tab-comp','admin')">🏁 แข่งขัน</button>
+        <button class="tab-btn" onclick="showTab('a-tab-log','admin')">📡 Log</button>
+        <button class="tab-btn" onclick="showTab('a-tab-lb','admin')">🏆 อันดับ</button>
+      </div>
+
+      <div id="a-tab-guilds" class="tab-content active"><div id="admin-guilds-list"></div></div>
+      
+      <div id="a-tab-teams" class="tab-content">
+        <div class="card">
+          <div class="card-title">➕ สร้างกลุ่ม (Admin)</div>
+          <div class="notice notice-warn" style="margin-bottom:12px;">⚠️ สมาชิกสูงสุด 3 คนต่อกลุ่ม</div>
+          <div class="grid-2">
+            <div class="form-group"><label>เลือกกิลด์</label><select id="admin-team-guild-sel" onchange="loadAdminAllTeams()"></select></div>
+            <div class="form-group"><label>ชื่อกลุ่ม</label><input id="new-team-name" placeholder="ชื่อกลุ่ม…" /></div>
+          </div>
+          <div class="form-group">
+            <label>ประเภทโปรเจกต์</label>
+            <select id="admin-team-type">
+              <option value="Unity">🎮 Unity</option>
+              <option value="Roblox">🟠 Roblox</option>
+              <option value="WebApp">🌐 WebApp</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>สมาชิก <span id="admin-team-count-chip" class="count-chip chip-ok" style="margin-left:4px;">0/3</span></label>
+            <div id="team-members-builder" class="flex-gap" style="margin-bottom:8px;min-height:24px;"></div>
+            <div style="display:flex;gap:8px;">
+              <input id="team-member-input" placeholder="ชื่อสมาชิก…" style="flex:1" onkeydown="if(event.key==='Enter')addTeamMemberInput()" />
+              <button class="btn btn-accent btn-sm" onclick="addTeamMemberInput()">+ เพิ่ม</button>
+            </div>
+          </div>
+          <button class="btn btn-gold btn-full" onclick="adminCreateTeam()">✨ สร้างกลุ่ม</button>
+        </div>
+        <div class="card">
+          <div class="card-title">👥 กลุ่มทั้งหมด</div>
+          <div id="admin-teams-list"></div>
+        </div>
+      </div>
+
+      <div id="a-tab-quests" class="tab-content">
+        <div class="card">
+          <div class="card-title">➕ สร้างเควสใหม่</div>
+          <div class="notice notice-info" style="margin-bottom:12px;">📌 ทุกกลุ่มในกิลด์ต้องส่งงานครบถึงผ่านได้</div>
+          <div class="form-group"><label>ชื่อเควส</label><input id="q-title" placeholder="ชื่อเควส…" /></div>
+          <div class="form-group"><label>คำอธิบาย</label><textarea id="q-desc" placeholder="รายละเอียด…"></textarea></div>
+          <div class="grid-2">
+            <div class="form-group"><label>XP รางวัล</label><input id="q-pts" type="number" value="50" min="0" /></div>
+            <div class="form-group"><label>ไอคอน</label><input id="q-icon" value="⚔️" style="font-size:1.2rem;" /></div>
+          </div>
+          <div class="form-group">
+            <label>มอบให้กิลด์</label>
+            <select id="q-guild"><option value="">— ทุกกิลด์ —</option></select>
+          </div>
+          <button class="btn btn-gold btn-full" onclick="adminCreateQuest()">✨ สร้างเควส</button>
+        </div>
+        <div class="card"><div class="card-title">📜 เควสทั้งหมด</div><div id="admin-quest-list"></div></div>
+      </div>
+
+      <div id="a-tab-submissions" class="tab-content">
+        <div class="card">
+          <div class="card-title">📬 งานที่รอ Approve <span id="pending-count" class="badge badge-pending" style="margin-left:6px;"></span></div>
+          <div id="admin-submissions"></div>
+        </div>
+      </div>
+
+      <div id="a-tab-cards" class="tab-content">
+        <div class="card">
+          <div class="card-title">🔑 คำขอกรอกรหัสการ์ด <span id="redeem-pending-count" class="badge badge-pending" style="margin-left:6px;"></span></div>
+          <div class="notice notice-info" style="margin-bottom:12px;font-size:.82rem;">หัวกิลด์กรอกรหัสมาจาก Discord — ตรวจสอบก่อนอนุมัติ</div>
+          <div id="admin-redeem-requests"></div>
+        </div>
+        <div class="card">
+          <div class="card-title">➕ สร้างการ์ดเทมเพลต</div>
+          <div class="grid-2">
+            <div class="form-group"><label>ไอคอน</label><input id="card-icon-input" value="🃏" placeholder="emoji…" /></div>
+            <div class="form-group"><label>ชื่อการ์ด</label><input id="card-name-input" placeholder="ชื่อการ์ด…" /></div>
+          </div>
+          <div class="form-group"><label>ผลการ์ด</label><input id="card-effect-input" placeholder="ผลของการ์ด…" /></div>
+          <div class="form-group">
+            <label>รหัสการ์ด (unique)</label>
+            <input id="card-code-input" placeholder="CAMP-XXXX…" style="font-family:'Space Grotesk',sans-serif;letter-spacing:.06em;text-transform:uppercase;" oninput="this.value=this.value.toUpperCase()" />
+          </div>
+          <div class="form-group">
+            <label>รูปภาพ (PNG/JPG สูงสุด 3MB, ไม่บังคับ)</label>
+            <input id="card-image-input" type="file" accept="image/png,image/jpeg" />
+            <div id="card-image-preview-wrap" style="display:none;margin-top:8px;"><img id="card-image-preview" style="max-width:100%;max-height:160px;border-radius:10px;border:1px solid var(--border);" /></div>
+          </div>
+          <button class="btn btn-purple btn-full" onclick="adminCreateCard()">✨ สร้างการ์ด</button>
+        </div>
+        <div class="card">
+          <div class="card-title">🃏 การ์ดทั้งหมดในระบบ</div>
+          <div class="notice notice-warn" style="margin-bottom:12px;font-size:.82rem;">⚠️ การ์ดที่ถูกใช้แล้วจะลบไม่ได้</div>
+          <div id="admin-all-cards" class="grid-3"></div>
+        </div>
+      </div>
+
+      <div id="a-tab-comp" class="tab-content">
+        <div class="card">
+          <div class="card-title">➕ สร้างการแข่งขัน</div>
+          <div class="form-group"><label>ชื่อการแข่งขัน</label><input id="comp-name" placeholder="ชื่อการแข่งขัน…" /></div>
+          <button class="btn btn-gold btn-full" onclick="adminCreateCompetition()">🏁 สร้าง</button>
+        </div>
+        <div class="card"><div class="card-title">🏁 การแข่งขันทั้งหมด</div><div id="admin-comp-list"></div></div>
+      </div>
+
+      <div id="a-tab-log" class="tab-content">
+        <div class="card">
+          <div class="card-title">📡 Activity Log</div>
+          <div id="console-log"></div>
+          <button class="btn btn-ghost btn-sm mt-s" onclick="loadAdminLog()">↻ รีเฟรช</button>
+        </div>
+      </div>
+
+      <div id="a-tab-lb" class="tab-content">
+        <div class="card"><div class="card-title">🏆 อันดับกิลด์</div><div id="admin-lb"></div></div>
+      </div>
+    </div>
+  </div>
+
+
+  <div class="modal-overlay" id="modal-view-img" onclick="closeModal('modal-view-img')">
+    <div style="max-width:90vw;max-height:90vh;"><img id="modal-big-img" style="max-width:100%;max-height:85vh;border-radius:14px;display:block;" alt="" /></div>
+  </div>
+
+  <div class="modal-overlay" id="modal-edit-guild">
+    <div class="modal-box">
+      <div class="modal-title">✏️ แก้ไขกิลด์</div>
+      <input type="hidden" id="edit-guild-id" />
+      <div class="form-group"><label>ชื่อกิลด์</label><input id="edit-guild-name" /></div>
+      <div class="form-group"><label>คำอธิบาย</label><textarea id="edit-guild-desc" style="min-height:60px;"></textarea></div>
+      <div class="form-group"><label>XP ปัจจุบัน</label><input id="edit-guild-xp" type="number" min="0" /></div>
+      <div class="row mt">
+        <button class="btn btn-gold w-full" onclick="confirmEditGuild()">💾 บันทึก</button>
+        <button class="btn btn-ghost w-full" onclick="closeModal('modal-edit-guild')">ยกเลิก</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="modal-delete-guild">
+    <div class="modal-box">
+      <div class="modal-title">⚠️ ลบกิลด์</div>
+      <p id="modal-delete-guild-desc" style="margin-bottom:6px;font-size:.95rem;font-weight:600;"></p>
+      <div class="notice notice-danger" style="margin-bottom:16px;">⚠️ ข้อมูลทั้งหมดจะถูกลบถาวร</div>
+      <div class="form-group"><label>พิมพ์ชื่อกิลด์เพื่อยืนยัน</label><input id="delete-guild-confirm-input" placeholder="ชื่อกิลด์…" /></div>
+      <div class="row mt">
+        <button class="btn btn-red w-full" onclick="confirmDeleteGuild()">🗑️ ลบถาวร</button>
+        <button class="btn btn-ghost w-full" onclick="closeModal('modal-delete-guild')">ยกเลิก</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="modal-manage-members">
+    <div class="modal-box" style="max-width:540px;">
+      <div class="modal-title">👥 จัดการสมาชิก — <span id="modal-members-guild-name"></span></div>
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px;margin-bottom:14px;">
+        <div class="section-title">➕ เพิ่มสมาชิก</div>
+        <div class="grid-2" style="margin-bottom:8px;">
+          <input id="add-member-name" placeholder="ชื่อสมาชิก…" />
+          <select id="add-member-role">
+            <option value="member">⚔️ สมาชิก</option>
+            <option value="leader">👑 หัวกิลด์</option>
+          </select>
+        </div>
+        <button class="btn btn-green btn-sm w-full" onclick="adminAddMember()">+ เพิ่มสมาชิก</button>
+      </div>
+      <div class="section-title">สมาชิกปัจจุบัน <span id="modal-member-count" class="badge badge-member" style="font-size:.68rem;"></span></div>
+      <div id="modal-members-list"></div>
+      <button class="btn btn-ghost btn-full btn-sm mt-s" onclick="closeModal('modal-manage-members')">ปิด</button>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="modal-edit-member">
+    <div class="modal-box" style="max-width:360px;">
+      <div class="modal-title">✏️ แก้ไขสมาชิก</div>
+      <input type="hidden" id="edit-member-id" />
+      <div class="form-group"><label>ชื่อ</label><input id="edit-member-name" /></div>
+      <div class="form-group"><label>บทบาท</label>
+        <select id="edit-member-role">
+          <option value="member">⚔️ สมาชิก</option>
+          <option value="leader">👑 หัวกิลด์</option>
+        </select>
+      </div>
+      <div class="row mt">
+        <button class="btn btn-gold w-full" onclick="confirmEditMember()">💾 บันทึก</button>
+        <button class="btn btn-ghost w-full" onclick="closeModal('modal-edit-member')">ยกเลิก</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="modal-approve-redeem">
+    <div class="modal-box">
+      <div class="modal-title">🃏 อนุมัติรหัสการ์ด</div>
+      <div id="modal-approve-redeem-content" style="margin-bottom:16px;"></div>
+      <div class="row">
+        <button class="btn btn-green w-full" onclick="confirmApproveRedeem(true)">✅ อนุมัติ</button>
+        <button class="btn btn-red w-full" onclick="confirmApproveRedeem(false)">❌ ปฏิเสธ</button>
+      </div>
+      <button class="btn btn-ghost btn-full btn-sm mt-s" onclick="closeModal('modal-approve-redeem')">ยกเลิก</button>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="modal-delete-card">
+    <div class="modal-box">
+      <div class="modal-title">🗑️ ลบการ์ด</div>
+      <p id="modal-delete-card-desc" style="margin-bottom:16px;color:var(--muted);font-size:.9rem;"></p>
+      <div class="row">
+        <button class="btn btn-red w-full" onclick="confirmDeleteCard()">🗑️ ลบถาวร</button>
+        <button class="btn btn-ghost w-full" onclick="closeModal('modal-delete-card')">ยกเลิก</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="modal-finish-comp">
+    <div class="modal-box">
+      <div class="modal-title">🏆 จบการแข่งขัน</div>
+      <div id="modal-finish-comp-content" style="margin-bottom:16px;"></div>
+      <div class="row">
+        <button class="btn btn-gold w-full" onclick="confirmFinishComp()">✅ จบการแข่งขัน</button>
+        <button class="btn btn-ghost w-full" onclick="closeModal('modal-finish-comp')">ยกเลิก</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="toast"></div>
+  <button id="theme-toggle" onclick="toggleTheme()" title="Toggle Dark/Light Mode">🌓</button>
+  <script type="module" src="js/main.js"></script>
+</body>
+</html>
