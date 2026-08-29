@@ -8,65 +8,84 @@ export async function loadGuildList() {
   if(!wrap) return;
   wrap.innerHTML = '<div class="muted" style="padding:20px;">กำลังโหลด…</div>';
 
-  const { data: guilds } = await db.from('guilds').select('*, members(*)');
-  const { data: allTeams } = await db.from('teams').select('guild_id, type');
+  try {
+    const { data: guilds, error: guildsErr } = await db.from('guilds').select('*, members(*)');
+    if (guildsErr) throw guildsErr;
+    const { data: allTeams, error: teamsErr } = await db.from('teams').select('guild_id, type');
+    if (teamsErr) throw teamsErr;
 
-  let myGuildId = null, myGuildName = '';
-  if (state.name) {
-    const { data: me } = await db.from('members').select('guild_id, guilds(name)').eq('name', state.name).maybeSingle();
-    if (me) { myGuildId = me.guild_id; myGuildName = me.guilds?.name || ''; }
-  }
+    let myGuildId = null, myGuildName = '';
+    if (state.name) {
+      const { data: me } = await db.from('members').select('guild_id, guilds(name)').eq('name', state.name).maybeSingle();
+      if (me) { myGuildId = me.guild_id; myGuildName = me.guilds?.name || ''; }
+    }
 
-  if (myGuildId && banner) {
-    banner.style.display = '';
-    banner.innerHTML = `🏰 คุณอยู่ในกิลด์ <strong>${myGuildName}</strong> แล้ว — คลิกเพื่อเข้ากิลด์ของคุณหรือออกก่อนค่อยเปลี่ยน`;
-  } else if(banner) { banner.style.display = 'none'; }
+    if (myGuildId && banner) {
+      banner.style.display = '';
+      banner.innerHTML = `🏰 คุณอยู่ในกิลด์ <strong>${myGuildName}</strong> แล้ว — คลิกเพื่อเข้ากิลด์ของคุณหรือออกก่อนค่อยเปลี่ยน`;
+    } else if(banner) { banner.style.display = 'none'; }
 
-  if (!guilds || guilds.length === 0) {
-    wrap.innerHTML = '<div class="empty">ยังไม่มีกิลด์ — สร้างกิลด์แรก!</div>'; return;
-  }
+    if (!guilds || guilds.length === 0) {
+      wrap.innerHTML = '<div class="empty">ยังไม่มีกิลด์ — สร้างกิลด์แรก!</div>'; return;
+    }
 
-  wrap.innerHTML = guilds.map(g => {
-    const lvInfo = getLevelInfo(g.xp || 0);
-    const isMine = g.id === myGuildId;
-    const isLocked = myGuildId && !isMine;
-    const members = g.members || [];
-    const leader = members.find(m => m.role === 'leader');
-    const memberChips = members.map(m =>
-      `<div class="guild-member-chip ${m.role === 'leader' ? 'leader-chip' : ''}">
-        ${m.role === 'leader' ? '👑 ' : '👤 '}${m.name}
-      </div>`
-    ).join('');
-    const guildTeams = (allTeams || []).filter(t => t.guild_id === g.id);
-    const types = [...new Set(guildTeams.map(t => t.type).filter(Boolean))];
-    const typeChips = types.map(tp => `<span class="badge badge-${typeClass(tp)}">${typeIcon(tp)} ${tp}</span>`).join('');
+    wrap.innerHTML = guilds.map(g => {
+      const lvInfo = getLevelInfo(g.xp || 0);
+      const isMine = g.id === myGuildId;
+      const isLocked = myGuildId && !isMine;
+      const members = g.members || [];
+      const leader = members.find(m => m.role === 'leader');
+      const memberChips = members.map(m =>
+        `<div class="guild-member-chip ${m.role === 'leader' ? 'leader-chip' : ''}">
+          ${m.role === 'leader' ? '👑 ' : '👤 '}${m.name}
+        </div>`
+      ).join('');
+      const guildTeams = (allTeams || []).filter(t => t.guild_id === g.id);
+      const types = [...new Set(guildTeams.map(t => t.type).filter(Boolean))];
+      const typeChips = types.map(tp => `<span class="badge badge-${typeClass(tp)}">${typeIcon(tp)} ${tp}</span>`).join('');
 
-    return `
-      <div class="guild-big-card ${isLocked ? 'locked' : ''} ${isMine ? 'mine' : ''}"
-        onclick="${isLocked ? `toast('ออกจากกิลด์ของคุณก่อน','var(--amber)')` : (`joinGuild(${g.id})`)}">
-        <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;">
-          <div style="flex:1;min-width:0;">
-            <div style="font-family:'Space Grotesk',sans-serif;font-size:1.1rem;font-weight:800;color:var(--text);
-              text-shadow:0 2px 8px rgba(0,0,0,.08);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
-              ${g.name}${isMine ? ` <span style="color:var(--blue);font-size:.7rem;font-weight:700;">● คุณ</span>` : ''}
+      return `
+        <div class="guild-big-card ${isLocked ? 'locked' : ''} ${isMine ? 'mine' : ''}"
+          onclick="${isLocked ? `toast('ออกจากกิลด์ของคุณก่อน','var(--amber)')` : (`joinGuild(${g.id})`)}">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;">
+            <div style="flex:1;min-width:0;">
+              <div style="font-family:'Space Grotesk',sans-serif;font-size:1.1rem;font-weight:800;color:var(--text);
+                text-shadow:0 2px 8px rgba(0,0,0,.08);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
+                ${g.name}${isMine ? ` <span style="color:var(--blue);font-size:.7rem;font-weight:700;">● คุณ</span>` : ''}
+              </div>
+              ${leader ? `<div style="font-size:.78rem;color:var(--gold);font-weight:700;margin-top:2px;">👑 ${leader.name}</div>` : `<div style="font-size:.76rem;color:var(--red);margin-top:2px;">⚠️ ไม่มีหัวกิลด์</div>`}
             </div>
-            ${leader ? `<div style="font-size:.78rem;color:var(--gold);font-weight:700;margin-top:2px;">👑 ${leader.name}</div>` : `<div style="font-size:.76rem;color:var(--red);margin-top:2px;">⚠️ ไม่มีหัวกิลด์</div>`}
+            <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex-shrink:0;">
+              <span class="level-badge lv-${lvInfo.current.lv}" style="font-size:.72rem;padding:3px 8px;">
+                ${lvInfo.current.icon} Lv.${lvInfo.current.lv}
+              </span>
+              <div style="font-size:.7rem;color:var(--muted);">${g.xp || 0} XP</div>
+            </div>
           </div>
-          <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex-shrink:0;">
-            <span class="level-badge lv-${lvInfo.current.lv}" style="font-size:.72rem;padding:3px 8px;">
-              ${lvInfo.current.icon} Lv.${lvInfo.current.lv}
-            </span>
-            <div style="font-size:.7rem;color:var(--muted);">${g.xp || 0} XP</div>
+          ${typeChips ? `<div class="flex-gap" style="margin:6px 0 4px;">${typeChips}</div>` : ''}
+          <div style="height:1px;background:var(--border);margin:8px 0;"></div>
+          <div class="news-members-preview" style="gap:4px;">
+            ${memberChips || '<span class="muted" style="font-size:.76rem;">ยังไม่มีสมาชิก</span>'}
           </div>
         </div>
-        ${typeChips ? `<div class="flex-gap" style="margin:6px 0 4px;">${typeChips}</div>` : ''}
-        <div style="height:1px;background:var(--border);margin:8px 0;"></div>
-        <div class="news-members-preview" style="gap:4px;">
-          ${memberChips || '<span class="muted" style="font-size:.76rem;">ยังไม่มีสมาชิก</span>'}
+      `;
+    }).join('');
+  } catch (err) {
+    console.error('loadGuildList error:', err);
+    wrap.innerHTML = `
+      <div style="grid-column: 1 / -1; background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.3); border-radius: 1rem; padding: 1.5rem; text-align: center; color: #fca5a5;">
+        <div style="font-size: 1.25rem; font-weight: 700; margin-bottom: 0.5rem; color: #f87171;">⚠️ ไม่สามารถเชื่อมต่อกับฐานข้อมูล Supabase ได้</div>
+        <div style="font-size: 0.875rem; color: #cbd5e1; margin-bottom: 1rem;">${err.message || 'Failed to fetch database'}</div>
+        <div style="font-size: 0.8rem; color: #94a3b8; max-width: 480px; margin: 0 auto 1.25rem auto; background: rgba(0,0,0,0.3); padding: 0.75rem; border-radius: 0.5rem;">
+          💡 <strong>สาเหตุที่พบบ่อย:</strong> โปรเจกต์ Supabase อาจถูกหยุดทำงานชั่วคราว (Paused) ให้เข้าไปกู้คืนโปรเจกต์ที่ Supabase Dashboard หรือตรวจสอบ URL ใน <code>js/supabase.js</code>
         </div>
+        <button onclick="loadGuildList()" style="padding: 0.5rem 1.25rem; background: linear-gradient(to right, #ff2a2a, #ff6b00); color: white; font-weight: 700; border-radius: 0.75rem; border: none; cursor: pointer;">
+          🔄 ลองโหลดใหม่อีกครั้ง
+        </button>
       </div>
     `;
-  }).join('');
+    toast('เกิดข้อผิดพลาดในการโหลดข้อมูล: ' + (err.message || 'Failed to fetch'), 'var(--red)');
+  }
 }
 
 export async function createGuild() {
