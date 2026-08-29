@@ -52,32 +52,28 @@ wrap.innerHTML = guilds.map(g => {
   const types = [...new Set(guildTeams.map(t => t.type).filter(Boolean))];
   const typeChips = types.map(tp => `<span class="badge badge-${typeClass(tp)}">${getGameIcon(tp)} ${tp}</span>`).join('');
 
-  return `
-    <div class="guild-big-card ${isLocked ? 'locked' : ''} ${isMine ? 'mine' : ''}"
-      onclick="${isLocked ? `toast('ออกจากกิลด์ของคุณก่อน')` : (`joinGuild(${g.id})`)}">
-      <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;">
-        <div style="flex:1;min-width:0;">
-          <div style="font-family:'Space Grotesk',sans-serif;font-size:1.1rem;font-weight:800;color:var(--text);
-            text-shadow:0 2px 8px rgba(0,0,0,.08);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
-            ${g.name}${isMine ? ` <span style="color:var(--brand-orange);font-size:.7rem;font-weight:700;"><i class="fa-solid fa-circle text-[0.5rem] relative -top-0.5"></i> คุณ</span>` : ''}
+      return `
+        <div class="guild-big-card ${isLocked ? 'locked' : ''} ${isMine ? 'mine' : ''}"
+          onclick="${isLocked ? `toast('ออกจากกิลด์ของคุณก่อน')` : (`joinGuild(${g.id})`)}">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;">
+            <div style="flex:1;min-width:0;">
+              <div style="font-family:'Space Grotesk',sans-serif;font-size:1.1rem;font-weight:800;color:var(--text);
+                text-shadow:0 2px 8px rgba(0,0,0,.08);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
+                ${g.name}${isMine ? ` <span style="color:var(--brand-orange);font-size:.7rem;font-weight:700;"><i class="fa-solid fa-circle text-[0.5rem] relative -top-0.5"></i> คุณ</span>` : ''}
+              </div>
+              ${leader ? `<div style="font-size:.78rem;color:var(--gold);font-weight:700;margin-top:2px;"><i class="fa-solid fa-crown text-brand-yellow"></i> ${leader.name}</div>` : `<div style="font-size:.76rem;color:var(--red);margin-top:2px;"><i class="fa-solid fa-triangle-exclamation"></i> ไม่มีหัวกิลด์</div>`}
+            </div>
+            <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex-shrink:0;">
+              <span class="level-badge lv-${lvInfo.current.lv}" style="font-size:.72rem;padding:3px 8px;">
+                ${lvInfo.current.icon || '<i class="fa-solid fa-star text-brand-yellow"></i>'} Lv.${lvInfo.current.lv}
+              </span>
+              <div style="font-size:.7rem;color:var(--muted);">${g.xp || 0} XP</div>
+            </div>
           </div>
-          ${leader ? `<div style="font-size:.78rem;color:var(--gold);font-weight:700;margin-top:2px;"><i class="fa-solid fa-crown text-brand-yellow"></i> ${leader.name}</div>` : `<div style="font-size:.76rem;color:var(--red);margin-top:2px;"><i class="fa-solid fa-triangle-exclamation"></i> ไม่มีหัวกิลด์</div>`}
-        </div>
-        <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex-shrink:0;">
-          <span class="level-badge lv-${lvInfo.current.lv}" style="font-size:.72rem;padding:3px 8px;">
-            ${lvInfo.current.icon || '<i class="fa-solid fa-star text-brand-yellow"></i>'} Lv.${lvInfo.current.lv}
-          </span>
-          <div style="font-size:.7rem;color:var(--muted);">${g.xp || 0} XP</div>
-        </div>
-      </div>
-      ${typeChips ? `<div class="flex-gap" style="margin:6px 0 4px;">${typeChips}</div>` : ''}
-      <div style="height:1px;background:var(--border);margin:8px 0;"></div>
-      <div class="news-members-preview" style="gap:4px;">
-        ${memberChips || '<span class="muted" style="font-size:.76rem;">ยังไม่มีสมาชิก</span>'}
-      </div>
-    </div>
-  `;
-});
+          ${typeChips ? `<div class="flex-gap" style="margin:6px 0 4px;">${typeChips}</div>` : ''}
+          <div style="height:1px;background:var(--border);margin:8px 0;"></div>
+          <div class="news-members-preview" style="gap:4px;">
+            ${memberChips || '<span class="muted" style="font-size:.76rem;">ยังไม่มีสมาชิก</span>'}
           </div>
         </div>
       `;
